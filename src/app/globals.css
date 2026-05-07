@@ -1,0 +1,62 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  color-scheme: dark;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  background:
+    radial-gradient(ellipse 120% 80% at 0% -20%, rgba(26, 159, 255, 0.14), transparent 50%),
+    radial-gradient(ellipse 80% 60% at 100% 0%, rgba(244, 240, 232, 0.05), transparent 45%),
+    linear-gradient(165deg, #060d18 0%, #0a1628 38%, #0c1e36 100%);
+  color: #f4f0e8;
+}
+
+.glass {
+  background: linear-gradient(180deg, rgba(244, 240, 232, 0.07), rgba(244, 240, 232, 0.025));
+  border: 1px solid rgba(244, 240, 232, 0.1);
+  box-shadow: 0 28px 90px rgba(0, 0, 0, 0.35), inset 0 1px 0 rgba(244, 240, 232, 0.06);
+  backdrop-filter: blur(20px);
+}
+
+.grid-bg {
+  background-image:
+    linear-gradient(rgba(244, 240, 232, 0.035) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(244, 240, 232, 0.035) 1px, transparent 1px);
+  background-size: 48px 48px;
+  background-position: center top;
+}
+
+.pulse-bar {
+  background: linear-gradient(90deg, transparent, rgba(26, 159, 255, 0.35), transparent);
+  background-size: 200% 100%;
+  animation: pulse-bar 4s ease-in-out infinite;
+}
+
+@keyframes pulse-bar {
+  0%,
+  100% {
+    background-position: 200% 0;
+  }
+  50% {
+    background-position: -200% 0;
+  }
+}
+
+::-webkit-scrollbar {
+  width: 10px;
+}
+::-webkit-scrollbar-track {
+  background: #060d18;
+}
+::-webkit-scrollbar-thumb {
+  background: rgba(26, 159, 255, 0.35);
+  border-radius: 999px;
+}
