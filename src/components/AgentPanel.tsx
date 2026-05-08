@@ -33,6 +33,7 @@ export function AgentPanel() {
   const pathname = usePathname();
 
   const isCommandCenter = pathname === "/command-center";
+  const isDemandIntelligence = pathname === "/demand-intelligence";
 
   const liveSignals = useMemo(
     () =>
@@ -44,6 +45,14 @@ export function AgentPanel() {
             { label: "S-04 coaching required", chip: "Coaching" },
             { label: "4 approvals pending", chip: "Approvals" },
           ]
+        : isDemandIntelligence
+          ? [
+              { label: "R-07 demand is rising faster than fill readiness", chip: "R-07" },
+              { label: "R-12 juice 1L is repeatedly under-forecast", chip: "R-12" },
+              { label: "C-184 buying frequency is increasing", chip: "C-184" },
+              { label: "R-03 chilled demand has low confidence", chip: "R-03" },
+              { label: "6 planning actions are open", chip: "Open" },
+            ]
         : [
             { label: "14 customers at stockout risk", chip: "Stockout" },
             { label: "5 SKUs with expiry exposure", chip: "Expiry" },
@@ -51,30 +60,43 @@ export function AgentPanel() {
             { label: "2 vans underloaded before dispatch", chip: "Vans" },
             { label: "9 open actions need closure", chip: "Actions" },
           ],
-    [isCommandCenter],
+    [isCommandCenter, isDemandIntelligence],
   );
 
   const diagnosisText = isCommandCenter
     ? "The biggest risk today is lost sales from underloaded fast-moving SKUs and expiry exposure on slow-moving inventory. Close replenishment and rebalance actions before dispatch."
-    : "GTC has three immediate risks: stockouts on high-demand routes, expiry exposure on slow-moving SKUs, and execution gaps in selected routes. The system recommends correcting van loads, rebalancing stock, and closing supervisor actions before dispatch.";
+    : isDemandIntelligence
+      ? "Demand risk is concentrated in R-07, R-12, and C-184. The forecast should be adjusted before replenishment and van loading decisions are finalized."
+      : "GTC has three immediate risks: stockouts on high-demand routes, expiry exposure on slow-moving SKUs, and execution gaps in selected routes. The system recommends correcting van loads, rebalancing stock, and closing supervisor actions before dispatch.";
 
   const recommendedNextAction = isCommandCenter
     ? "Approve R-07 load correction and SKU-118 rebalance before dispatch."
-    : "Close urgent supervisor actions today.";
+    : isDemandIntelligence
+      ? "Update R-07 fast-mover demand and send the must-load list to replenishment before dispatch."
+      : "Close urgent supervisor actions today.";
 
-  const impactChips = [
-    "SAR 420K revenue protected",
-    "SAR 210K expiry loss avoided",
-    "14% travel time reduction",
-    "7.5% strike rate improvement",
-  ] as const;
+  const impactChips = isDemandIntelligence
+    ? ([
+        "SAR 420K revenue protected",
+        "14 stockout-risk customers reduced",
+        "Better van loading accuracy",
+        "Fewer manual forecast overrides",
+      ] as const)
+    : ([
+        "SAR 420K revenue protected",
+        "SAR 210K expiry loss avoided",
+        "14% travel time reduction",
+        "7.5% strike rate improvement",
+      ] as const);
 
   const suggestedQuestions = useMemo(
     () =>
       isCommandCenter
         ? ["Which route needs action today?", "What should we load tomorrow?", "Which approval is pending?"]
-        : ["Which route needs action today?", "What should we load tomorrow?", "Which customer is at risk?"],
-    [isCommandCenter],
+        : isDemandIntelligence
+          ? ["Which route demand is rising?", "Which SKU needs review?", "What should replenishment prepare?"]
+          : ["Which route needs action today?", "What should we load tomorrow?", "Which customer is at risk?"],
+    [isCommandCenter, isDemandIntelligence],
   );
 
   return (
@@ -109,7 +131,7 @@ export function AgentPanel() {
             <div>
               <h2 className="text-lg font-semibold leading-tight tracking-tight text-ivory">SYDIAI Intelligence Agent</h2>
               <p className="mt-1.5 text-xs font-medium leading-relaxed text-ivory/55">
-                {isCommandCenter ? "What needs action today" : "What needs attention today"}
+                {isCommandCenter || isDemandIntelligence ? "What needs action today" : "What needs attention today"}
               </p>
             </div>
           </div>
