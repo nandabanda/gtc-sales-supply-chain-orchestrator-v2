@@ -34,6 +34,7 @@ export function AgentPanel() {
 
   const isCommandCenter = pathname === "/command-center";
   const isDemandIntelligence = pathname === "/demand-intelligence";
+  const isReplenishment = pathname === "/replenishment-orchestrator";
 
   const liveSignals = useMemo(
     () =>
@@ -53,6 +54,14 @@ export function AgentPanel() {
               { label: "R-03 chilled demand has low confidence", chip: "R-03" },
               { label: "6 planning actions are open", chip: "Open" },
             ]
+          : isReplenishment
+            ? [
+                { label: "64 customers need supply", chip: "Supply" },
+                { label: "14 customers at stockout risk", chip: "Stockout" },
+                { label: "SKU-118 needs rebalance approval", chip: "Rebalance" },
+                { label: "11 credit holds need review", chip: "Credit" },
+                { label: "2 vans need load correction", chip: "Vans" },
+              ]
         : [
             { label: "14 customers at stockout risk", chip: "Stockout" },
             { label: "5 SKUs with expiry exposure", chip: "Expiry" },
@@ -60,19 +69,23 @@ export function AgentPanel() {
             { label: "2 vans underloaded before dispatch", chip: "Vans" },
             { label: "9 open actions need closure", chip: "Actions" },
           ],
-    [isCommandCenter, isDemandIntelligence],
+    [isCommandCenter, isDemandIntelligence, isReplenishment],
   );
 
   const diagnosisText = isCommandCenter
     ? "The biggest risk today is lost sales from underloaded fast-moving SKUs and expiry exposure on slow-moving inventory. Close replenishment and rebalance actions before dispatch."
     : isDemandIntelligence
       ? "Demand risk is concentrated in R-07, R-12, and C-184. The forecast should be adjusted before replenishment and van loading decisions are finalized."
+      : isReplenishment
+        ? "Supply risk is concentrated in R-07, R-12, and SKU-118. Correct the load plan, approve stock rebalance, and clear credit holds before dispatch."
       : "GTC has three immediate risks: stockouts on high-demand routes, expiry exposure on slow-moving SKUs, and execution gaps in selected routes. The system recommends correcting van loads, rebalancing stock, and closing supervisor actions before dispatch.";
 
   const recommendedNextAction = isCommandCenter
     ? "Approve R-07 load correction and SKU-118 rebalance before dispatch."
     : isDemandIntelligence
       ? "Update R-07 fast-mover demand and send the must-load list to replenishment before dispatch."
+      : isReplenishment
+        ? "Approve SKU-118 rebalance and update R-07 fast-moving SKU load plan."
       : "Close urgent supervisor actions today.";
 
   const impactChips = isDemandIntelligence
@@ -82,6 +95,13 @@ export function AgentPanel() {
         "Better van loading accuracy",
         "Fewer manual forecast overrides",
       ] as const)
+    : isReplenishment
+      ? ([
+          "SAR 420K revenue protected",
+          "SAR 210K expiry loss avoided",
+          "2 van loads corrected",
+          "11 credit decisions controlled",
+        ] as const)
     : ([
         "SAR 420K revenue protected",
         "SAR 210K expiry loss avoided",
@@ -95,8 +115,10 @@ export function AgentPanel() {
         ? ["Which route needs action today?", "What should we load tomorrow?", "Which approval is pending?"]
         : isDemandIntelligence
           ? ["Which route demand is rising?", "Which SKU needs review?", "What should replenishment prepare?"]
+          : isReplenishment
+            ? ["What should we supply today?", "Which SKU should be restricted?", "Which van load needs correction?"]
           : ["Which route needs action today?", "What should we load tomorrow?", "Which customer is at risk?"],
-    [isCommandCenter, isDemandIntelligence],
+    [isCommandCenter, isDemandIntelligence, isReplenishment],
   );
 
   return (
@@ -131,7 +153,13 @@ export function AgentPanel() {
             <div>
               <h2 className="text-lg font-semibold leading-tight tracking-tight text-ivory">SYDIAI Intelligence Agent</h2>
               <p className="mt-1.5 text-xs font-medium leading-relaxed text-ivory/55">
-                {isCommandCenter || isDemandIntelligence ? "What needs action today" : "What needs attention today"}
+                {isCommandCenter
+                  ? "What needs action today"
+                  : isDemandIntelligence
+                    ? "Demand actions for today"
+                    : isReplenishment
+                      ? "Supply decisions before dispatch"
+                      : "What needs attention today"}
               </p>
             </div>
           </div>
