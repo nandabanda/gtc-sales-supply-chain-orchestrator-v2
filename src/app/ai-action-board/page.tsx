@@ -101,6 +101,69 @@ const actionQueue = [
   },
 ] as const;
 
+const businessCaseCoverage = [
+  {
+    requirement: "Demand forecasting accuracy",
+    capability: "Demand Intelligence forecasts SKU, customer, and route demand with confidence scoring.",
+    coverage: "Covered",
+    impact: "Forecast accuracy 78.4% -> target 85%+",
+  },
+  {
+    requirement: "Customer-level replenishment",
+    capability: "Replenishment Orchestrator recommends what to supply, restrict, rebalance, and approve before dispatch.",
+    coverage: "Covered",
+    impact: "64 customers prioritized before dispatch",
+  },
+  {
+    requirement: "Overstock and expiry reduction",
+    capability: "Expiry and overstock logic identifies slow-moving SKUs, rebalance moves, and avoidable loss.",
+    coverage: "Covered",
+    impact: "SAR 210K expiry loss avoidance",
+  },
+  {
+    requirement: "Credit-aware sales",
+    capability: "Credit holds are routed to Finance Controller before supply release.",
+    coverage: "Covered",
+    impact: "11 credit decisions controlled",
+  },
+  {
+    requirement: "Route optimization",
+    capability: "Route Intelligence prioritizes customer sequence by value, SLA risk, stockout risk, and travel time.",
+    coverage: "Covered",
+    impact: "14% travel-time reduction opportunity",
+  },
+  {
+    requirement: "Van productivity",
+    capability: "Van loading intelligence flags underloaded vans and SKU load corrections before dispatch.",
+    coverage: "Covered",
+    impact: "2 vans require load correction",
+  },
+  {
+    requirement: "Salesman productivity",
+    capability: "Execution Intelligence separates coaching issues from supply and credit constraints.",
+    coverage: "Covered",
+    impact: "3 salesmen need coaching",
+  },
+  {
+    requirement: "Customer strike rate and recovery",
+    capability: "Execution Intelligence identifies missed customers, churn risk, and recovery actions.",
+    coverage: "Covered",
+    impact: "23 missed high-value visits addressed",
+  },
+  {
+    requirement: "Actionable insights for controllers",
+    capability: "AI Action Board converts signals into owned actions with status, approvals, and value at stake.",
+    coverage: "Covered",
+    impact: "9 open actions · SAR 1.04M value at stake",
+  },
+  {
+    requirement: "Success metrics tracking",
+    capability: "Action Board tracks open actions, closure, value captured, adoption, and operating performance.",
+    coverage: "Partially Covered",
+    impact: "Add next: success metrics tracker",
+  },
+] as const;
+
 const approvalQueue = [
   { title: "SKU-118 rebalance", owner: "Supply Controller", value: "SAR 210K", decision: "Approve transfer" },
   { title: "R-12 route sequence", owner: "Sales Supervisor", value: "SAR 180K", decision: "Approve route" },
@@ -146,6 +209,52 @@ export default function AIActionBoard() {
           {actionPulse.map((x) => (
             <PulseCard key={x.label} {...x} />
           ))}
+        </div>
+      </section>
+
+      <section className="mt-10">
+        <h3 className="mb-1 text-[10px] font-semibold uppercase tracking-[0.26em] text-electric">Business Case Coverage</h3>
+        <p className="mb-4 text-sm text-muted">How the operating system addresses the GTC supply chain efficiency requirements.</p>
+        <div className="overflow-hidden rounded-2xl border border-ivory/10 bg-ivory text-ink shadow-[0_20px_60px_rgba(0,0,0,0.25)] ring-1 ring-black/[0.05]">
+          <div className="overflow-x-auto">
+            <table className="w-full min-w-[1200px] border-collapse text-left text-sm">
+              <thead className="bg-ink/[0.04] text-[10px] font-semibold uppercase tracking-wider text-ink/55">
+                <tr>
+                  {["Business Requirement", "Tool Capability", "Current Coverage", "Impact Metric"].map((h) => (
+                    <th key={h} className="px-3 py-3 font-medium">
+                      {h}
+                    </th>
+                  ))}
+                </tr>
+              </thead>
+              <tbody>
+                {businessCaseCoverage.map((row) => (
+                  <tr key={row.requirement} className="border-t border-ink/[0.07]">
+                    <td className="px-3 py-3 font-medium text-ink/90">{row.requirement}</td>
+                    <td className="px-3 py-3 text-ink/85">{row.capability}</td>
+                    <td className="px-3 py-3">
+                      <span
+                        className={cn(
+                          "inline-flex rounded-full border px-2.5 py-0.5 text-[10px] font-semibold",
+                          row.coverage === "Covered"
+                            ? "border-emerald/45 bg-emerald/12 text-emerald"
+                            : "border-amber/50 bg-amber/14 text-amber",
+                        )}
+                      >
+                        {row.coverage}
+                      </span>
+                    </td>
+                    <td className="px-3 py-3 font-medium text-electric">{row.impact}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </div>
+        <div className="mt-4 grid gap-3 rounded-2xl border border-ivory/10 bg-ivory/[0.04] p-4 ring-1 ring-ivory/[0.06] md:grid-cols-3">
+          <p className="text-sm font-medium text-ivory">9 of 10 business requirements covered</p>
+          <p className="text-sm font-medium text-amber">1 requirement needs deeper tracking: success metrics tracker</p>
+          <p className="text-sm font-medium text-electric">Recommended next build: Success Metrics Tracker</p>
         </div>
       </section>
 
