@@ -35,6 +35,7 @@ export function AgentPanel() {
   const isCommandCenter = pathname === "/command-center";
   const isDemandIntelligence = pathname === "/demand-intelligence";
   const isReplenishment = pathname === "/replenishment-orchestrator";
+  const isRouteIntelligence = pathname === "/route-intelligence";
 
   const liveSignals = useMemo(
     () =>
@@ -62,6 +63,14 @@ export function AgentPanel() {
                 { label: "11 credit holds need review", chip: "Credit" },
                 { label: "2 vans need load correction", chip: "Vans" },
               ]
+          : isRouteIntelligence
+            ? [
+                { label: "R-12 sequence ready for approval", chip: "R-12" },
+                { label: "C-392 should move to first stop", chip: "C-392" },
+                { label: "C-184 has stockout risk on R-07", chip: "C-184" },
+                { label: "4 route changes need approval", chip: "Approvals" },
+                { label: "7 SLA-risk customers need protection", chip: "SLA" },
+              ]
         : [
             { label: "14 customers at stockout risk", chip: "Stockout" },
             { label: "5 SKUs with expiry exposure", chip: "Expiry" },
@@ -69,7 +78,7 @@ export function AgentPanel() {
             { label: "2 vans underloaded before dispatch", chip: "Vans" },
             { label: "9 open actions need closure", chip: "Actions" },
           ],
-    [isCommandCenter, isDemandIntelligence, isReplenishment],
+    [isCommandCenter, isDemandIntelligence, isReplenishment, isRouteIntelligence],
   );
 
   const diagnosisText = isCommandCenter
@@ -78,6 +87,8 @@ export function AgentPanel() {
       ? "Demand risk is concentrated in R-07, R-12, and C-184. The forecast should be adjusted before replenishment and van loading decisions are finalized."
       : isReplenishment
         ? "Supply risk is concentrated in R-07, R-12, and SKU-118. Correct the load plan, approve stock rebalance, and clear credit holds before dispatch."
+        : isRouteIntelligence
+          ? "Route risk is concentrated in R-12 and R-07. Move high-value and SLA-risk customers earlier, confirm van load readiness, and approve sequence changes before dispatch."
       : "GTC has three immediate risks: stockouts on high-demand routes, expiry exposure on slow-moving SKUs, and execution gaps in selected routes. The system recommends correcting van loads, rebalancing stock, and closing supervisor actions before dispatch.";
 
   const recommendedNextAction = isCommandCenter
@@ -86,6 +97,8 @@ export function AgentPanel() {
       ? "Update R-07 fast-mover demand and send the must-load list to replenishment before dispatch."
       : isReplenishment
         ? "Approve SKU-118 rebalance and update R-07 fast-moving SKU load plan."
+        : isRouteIntelligence
+          ? "Approve R-12 sequence and move C-392 and C-310 before 10:00 AM."
       : "Close urgent supervisor actions today.";
 
   const impactChips = isDemandIntelligence
@@ -102,6 +115,13 @@ export function AgentPanel() {
           "2 van loads corrected",
           "11 credit decisions controlled",
         ] as const)
+      : isRouteIntelligence
+        ? ([
+            "SAR 371K revenue protected on R-12",
+            "SAR 232K protected on C-184",
+            "14% travel time reduction",
+            "7 SLA-risk customers protected",
+          ] as const)
     : ([
         "SAR 420K revenue protected",
         "SAR 210K expiry loss avoided",
@@ -117,8 +137,10 @@ export function AgentPanel() {
           ? ["Which route demand is rising?", "Which SKU needs review?", "What should replenishment prepare?"]
           : isReplenishment
             ? ["What should we supply today?", "Which SKU should be restricted?", "Which van load needs correction?"]
+            : isRouteIntelligence
+              ? ["Which route needs resequencing?", "Which customer should be visited first?", "Which approval is pending?"]
           : ["Which route needs action today?", "What should we load tomorrow?", "Which customer is at risk?"],
-    [isCommandCenter, isDemandIntelligence, isReplenishment],
+    [isCommandCenter, isDemandIntelligence, isReplenishment, isRouteIntelligence],
   );
 
   return (
@@ -159,6 +181,8 @@ export function AgentPanel() {
                     ? "Demand actions for today"
                     : isReplenishment
                       ? "Supply decisions before dispatch"
+                      : isRouteIntelligence
+                        ? "Route actions before dispatch"
                       : "What needs attention today"}
               </p>
             </div>
