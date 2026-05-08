@@ -1,41 +1,10 @@
 "use client";
 
 import type { ReactNode } from "react";
-import { useState } from "react";
+import { useMemo, useState } from "react";
+import { usePathname } from "next/navigation";
 import { Activity, ArrowRight, MessageSquareText, Sparkles } from "lucide-react";
 import { cn } from "@/lib/utils";
-
-const liveSignals = [
-  { label: "14 customers at stockout risk", chip: "Stockout" },
-  { label: "5 SKUs with expiry exposure", chip: "Expiry" },
-  { label: "3 routes below productivity benchmark", chip: "Routes" },
-  { label: "2 vans underloaded before dispatch", chip: "Vans" },
-  { label: "9 open actions need closure", chip: "Actions" },
-] as const;
-
-const recommendedActions = [
-  "Increase fast-moving SKU load on R-07",
-  "Rebalance SKU-118 from R-03 to R-12",
-  "Approve R-12 route sequence",
-  "Coach S-04 on priority customer conversion",
-  "Close urgent supervisor actions today",
-] as const;
-
-const impactChips = [
-  "SAR 420K revenue protected",
-  "SAR 210K expiry loss avoided",
-  "14% travel time reduction",
-  "7.5% strike rate improvement",
-] as const;
-
-const suggestedQuestions = [
-  "Which route needs action today?",
-  "What should we load tomorrow?",
-  "Which customer is at risk?",
-] as const;
-
-const diagnosisText =
-  "GTC has three immediate risks: stockouts on high-demand routes, expiry exposure on slow-moving SKUs, and execution gaps in selected routes. The system recommends correcting van loads, rebalancing stock, and closing supervisor actions before dispatch.";
 
 function IvoryCard({
   children,
@@ -61,6 +30,52 @@ function IvoryCard({
 
 export function AgentPanel() {
   const [query, setQuery] = useState("");
+  const pathname = usePathname();
+
+  const isCommandCenter = pathname === "/command-center";
+
+  const liveSignals = useMemo(
+    () =>
+      isCommandCenter
+        ? [
+            { label: "R-07 stockout risk", chip: "Stockout" },
+            { label: "SKU-118 expiry exposure", chip: "Expiry" },
+            { label: "R-12 route resequence ready", chip: "Route" },
+            { label: "S-04 coaching required", chip: "Coaching" },
+            { label: "4 approvals pending", chip: "Approvals" },
+          ]
+        : [
+            { label: "14 customers at stockout risk", chip: "Stockout" },
+            { label: "5 SKUs with expiry exposure", chip: "Expiry" },
+            { label: "3 routes below productivity benchmark", chip: "Routes" },
+            { label: "2 vans underloaded before dispatch", chip: "Vans" },
+            { label: "9 open actions need closure", chip: "Actions" },
+          ],
+    [isCommandCenter],
+  );
+
+  const diagnosisText = isCommandCenter
+    ? "The biggest risk today is lost sales from underloaded fast-moving SKUs and expiry exposure on slow-moving inventory. Close replenishment and rebalance actions before dispatch."
+    : "GTC has three immediate risks: stockouts on high-demand routes, expiry exposure on slow-moving SKUs, and execution gaps in selected routes. The system recommends correcting van loads, rebalancing stock, and closing supervisor actions before dispatch.";
+
+  const recommendedNextAction = isCommandCenter
+    ? "Approve R-07 load correction and SKU-118 rebalance before dispatch."
+    : "Close urgent supervisor actions today.";
+
+  const impactChips = [
+    "SAR 420K revenue protected",
+    "SAR 210K expiry loss avoided",
+    "14% travel time reduction",
+    "7.5% strike rate improvement",
+  ] as const;
+
+  const suggestedQuestions = useMemo(
+    () =>
+      isCommandCenter
+        ? ["Which route needs action today?", "What should we load tomorrow?", "Which approval is pending?"]
+        : ["Which route needs action today?", "What should we load tomorrow?", "Which customer is at risk?"],
+    [isCommandCenter],
+  );
 
   return (
     <aside
@@ -94,7 +109,7 @@ export function AgentPanel() {
             <div>
               <h2 className="text-lg font-semibold leading-tight tracking-tight text-ivory">SYDIAI Intelligence Agent</h2>
               <p className="mt-1.5 text-xs font-medium leading-relaxed text-ivory/55">
-                What needs attention today
+                {isCommandCenter ? "What needs action today" : "What needs attention today"}
               </p>
             </div>
           </div>
@@ -129,21 +144,12 @@ export function AgentPanel() {
             </IvoryCard>
           </section>
 
-          {/* C. Recommended Actions */}
+          {/* C. Recommended Next Action */}
           <section>
-            <h3 className="mb-3 text-[10px] font-semibold uppercase tracking-[0.26em] text-ivory/55">Recommended actions</h3>
-            <div className="space-y-2.5">
-              {recommendedActions.map((action, i) => (
-                <IvoryCard key={action} contentClassName="py-3.5">
-                  <div className="flex gap-3">
-                    <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-lg bg-electric/15 text-xs font-bold text-electric ring-1 ring-electric/25">
-                      {i + 1}
-                    </span>
-                    <p className="text-sm font-medium leading-snug text-ink/90">{action}</p>
-                  </div>
-                </IvoryCard>
-              ))}
-            </div>
+            <h3 className="mb-3 text-[10px] font-semibold uppercase tracking-[0.26em] text-ivory/55">Recommended next action</h3>
+            <IvoryCard contentClassName="py-3.5">
+              <p className="text-sm font-medium leading-snug text-ink/90">{recommendedNextAction}</p>
+            </IvoryCard>
           </section>
 
           {/* D. Expected Impact */}
