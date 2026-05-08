@@ -108,9 +108,7 @@ export function VanLoadingIntelligence({ variant = "full" }: Props) {
           <Package className="h-5 w-5 text-electric" strokeWidth={1.75} />
           <h3 className="text-lg font-semibold text-ivory">Van loading snapshot</h3>
         </div>
-        <p className="mb-5 max-w-2xl text-sm text-muted">
-          Dispatch planning aligned to replenishment — utilization gaps, must-load SKUs, and expiry rotations (synthetic demo).
-        </p>
+        <p className="mb-5 max-w-2xl text-sm text-muted">Dispatch planning for utilization gaps, must-load SKUs, and expiry rotations.</p>
         <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
           <SummaryCard label="Vans needing load correction" value={kpis.vansNeedingCorrection} tone="amber" />
           <SummaryCard label="Must-load SKUs" value={kpis.mustLoad} tone="emerald" />
@@ -151,7 +149,7 @@ export function VanLoadingIntelligence({ variant = "full" }: Props) {
           <SummaryCard
             label="Expected revenue protected"
             value={kpis.revenueProtectedLabel}
-            hint="Synthetic from gap × margin"
+            hint="Estimated from load gap and margin"
             tone="emerald"
           />
         </div>
@@ -300,7 +298,7 @@ export function VanLoadingIntelligence({ variant = "full" }: Props) {
           <div className="h-6 w-1 rounded-full bg-gradient-to-b from-electric to-electric/30" aria-hidden />
           <h4 className="text-lg font-semibold text-ivory">AI Van Loading Decisions</h4>
         </div>
-        <p className="mb-4 max-w-3xl text-sm text-muted">Static narrative queue for tomorrow&apos;s dispatch meeting — synthetic GTC scenarios.</p>
+        <p className="mb-4 max-w-3xl text-sm text-muted">Dispatch decisions for tomorrow&apos;s run.</p>
         <ul className="grid gap-3 md:grid-cols-2">
           {aiVanLoadingDecisions.map((line) => (
             <li

@@ -137,9 +137,7 @@ export function CustomerOpportunityIntelligence() {
           </div>
           <div>
             <h3 className="text-[10px] font-semibold uppercase tracking-[0.28em] text-electric">Customer strike rate & opportunity intelligence</h3>
-            <p className="mt-2 max-w-3xl text-sm text-muted">
-              Missed coverage, underserved high-potential outlets, churn risk, revenue gap, and SKU / visit recommendations — synthetic scoring (no backend).
-            </p>
+            <p className="mt-2 max-w-3xl text-sm text-muted">Missed coverage, underserved high-potential outlets, churn risk, revenue gap, and SKU/visit recommendations.</p>
           </div>
         </div>
 

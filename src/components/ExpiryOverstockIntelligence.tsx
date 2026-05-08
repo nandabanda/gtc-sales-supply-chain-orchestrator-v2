@@ -139,9 +139,7 @@ export function ExpiryOverstockIntelligence({ variant = "full" }: Props) {
           <CalendarClock className="h-5 w-5 text-electric" strokeWidth={1.75} />
           <h3 className="text-lg font-semibold text-ivory">Expiry & overstock snapshot</h3>
         </div>
-        <p className="mb-5 max-w-2xl text-sm text-muted">
-          Near-expiry rotation, slow-moving cover, and rebalance targets before write-offs (synthetic demo).
-        </p>
+        <p className="mb-5 max-w-2xl text-sm text-muted">Near-expiry rotation, slow-moving cover, and rebalance targets before write-offs.</p>
         <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
           <SummaryCard label="SKUs at expiry risk" value={kpis.skusAtExpiryRisk} tone="danger" />
           <SummaryCard label="Stock value at risk" value={kpis.stockValueAtRiskLabel} tone="amber" />
@@ -170,9 +168,7 @@ export function ExpiryOverstockIntelligence({ variant = "full" }: Props) {
           </div>
           <div>
             <h3 className="text-[10px] font-semibold uppercase tracking-[0.28em] text-electric">Expiry & overstock risk intelligence</h3>
-            <p className="mt-2 max-w-3xl text-sm text-muted">
-              Shelf-life pressure, slow cover, liquidation vs rebalance paths, and salesman push guidance — no backend; synthetic scoring only.
-            </p>
+            <p className="mt-2 max-w-3xl text-sm text-muted">Shelf-life pressure, slow cover, liquidation vs rebalance paths, and salesman push guidance.</p>
           </div>
         </div>
 

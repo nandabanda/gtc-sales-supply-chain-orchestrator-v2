@@ -18,7 +18,7 @@ export default function CommandCenter() {
         ))}
       </section>
       <section className="mt-10 grid gap-5">
-        <Panel title="Forecast vs actual trend" subtitle="Demo trajectory of demand forecast accuracy improving over recent weeks.">
+        <Panel title="Forecast vs actual trend" subtitle="Demand trend and forecast accuracy over recent weeks.">
           <ForecastChart data={demandTrend} />
         </Panel>
         <Panel title="Route demand vs fill accuracy" subtitle="High demand with weak fill accuracy creates service and revenue risk — the agent highlights exception routes.">
@@ -29,7 +29,7 @@ export default function CommandCenter() {
         </Panel>
         <DecisionLayerPanel
           title="AI decision orchestration layer"
-          subtitle="Open, in-progress, and closed decisions with High / Medium / Low confidence — premium cards for boardroom review. Scenarios are synthetic for GTC."
+          subtitle="Open, in-progress, and closed decisions with confidence, owner, and impact."
           items={commandCenterDecisions}
         />
       </section>

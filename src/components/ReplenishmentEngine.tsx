@@ -81,7 +81,7 @@ export function ReplenishmentEngine() {
       <section>
         <h3 className="text-[10px] font-semibold uppercase tracking-[0.28em] text-electric">Replenishment engine</h3>
         <p className="mt-2 max-w-3xl text-sm text-muted">
-          Customer-level suggestions from synthetic demand, cover, credit, expiry, route productivity, and van utilization — no backend.
+          Customer-level suggestions from demand, cover, credit, expiry, route productivity, and van utilization.
         </p>
         <div className="mt-5 grid gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5">
           <SummaryCard label="Customers needing replenishment" value={kpis.needingReplenishment} hint="Suggested qty ≥ 4 cases" tone="electric" />
@@ -239,9 +239,7 @@ export function ReplenishmentEngine() {
           <div className="h-6 w-1 rounded-full bg-gradient-to-b from-electric to-electric/30" aria-hidden />
           <h4 className="text-lg font-semibold text-ivory">AI Replenishment Decisions</h4>
         </div>
-        <p className="mb-4 max-w-3xl text-sm text-muted">
-          Narrative queue for controllers — static synthetic copy aligned to GTC demo scenarios.
-        </p>
+        <p className="mb-4 max-w-3xl text-sm text-muted">Replenishment actions for controller review.</p>
         <ul className="grid gap-3 md:grid-cols-2">
           {aiReplenishmentDecisions.map((line) => (
             <li

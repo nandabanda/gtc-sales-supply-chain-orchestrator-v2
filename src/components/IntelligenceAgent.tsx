@@ -26,7 +26,7 @@ export function IntelligenceAgent() {
             </div>
             <div>
               <h2 className="text-lg font-semibold leading-snug text-ivory">SYDIAI Intelligence Agent</h2>
-              <p className="mt-1 text-xs leading-relaxed text-muted">Narrated guidance for leadership — grounded in your demo signals.</p>
+              <p className="mt-1 text-xs leading-relaxed text-muted">Guidance for leadership based on current operating signals.</p>
             </div>
           </div>
         </div>

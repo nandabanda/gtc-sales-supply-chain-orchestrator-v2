@@ -8,7 +8,7 @@ import { MobileNavStrip } from "@/components/MobileNavStrip";
 export const metadata: Metadata = {
   title: "GTC Sales & Supply Chain Orchestrator | Olayan Group",
   description:
-    "AI decision cockpit for demand, replenishment, route and execution intelligence — premium enterprise demo for Olayan Group / GTC.",
+    "Operating layer for demand, replenishment, routing, execution, and governed actions for Olayan Group / GTC.",
 };
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {

@@ -109,13 +109,13 @@ export function RouteOptimizationIntelligence() {
           <h3 className="text-lg font-semibold text-ivory">Route optimization intelligence</h3>
         </div>
         <p className="max-w-3xl text-sm text-muted">
-          Sequence rank connects replenishment and van readiness to SLA, revenue protection, strike uplift, and supervisor governance — synthetic demo rules only.
+          Sequence rank connects replenishment and van readiness to SLA, revenue protection, strike uplift, and supervisor governance.
         </p>
         <div className="mt-5 grid gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6">
           <SummaryCard label="Routes optimized" value={kpis.routesOptimized} hint="Routes with sequence changes" tone="electric" />
           <SummaryCard label="SLA-critical customers" value={kpis.slaCriticalCustomers} tone="danger" />
           <SummaryCard label="Revenue protected (rollup)" value={kpis.revenueProtectedLabel} tone="emerald" />
-          <SummaryCard label="Missed-call exposure reduced" value={`${kpis.missedCallsPrevented} pts`} hint="Synthetic index" tone="amber" />
+          <SummaryCard label="Missed-call exposure reduced" value={`${kpis.missedCallsPrevented} pts`} hint="Current route index" tone="amber" />
           <SummaryCard label="Average time saving / stop" value={kpis.avgTimeSaving} tone="electric" />
           <SummaryCard label="Supervisor approvals required" value={kpis.supervisorApprovalsRequired} tone="amber" />
         </div>
@@ -322,7 +322,7 @@ export function RouteOptimizationIntelligence() {
           <div className="h-6 w-1 rounded-full bg-gradient-to-b from-electric to-electric/30" aria-hidden />
           <h4 className="text-lg font-semibold text-ivory">AI Route Optimization Decisions</h4>
         </div>
-        <p className="mb-4 max-w-3xl text-sm text-muted">Static dispatch narratives for leadership review — aligned to GTC demo routes.</p>
+        <p className="mb-4 max-w-3xl text-sm text-muted">Route actions for supervisor review.</p>
         <ul className="grid gap-3 md:grid-cols-2">
           {aiRouteOptimizationDecisions.map((line) => (
             <li

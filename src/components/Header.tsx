@@ -6,15 +6,14 @@ export function Header() {
         <div className="min-w-0">
           <p className="text-[10px] font-semibold uppercase tracking-[0.28em] text-electric">GTC Sales &amp; Supply Chain Orchestrator</p>
           <h2 className="mt-2 max-w-3xl text-xl font-semibold tracking-tight text-ivory md:text-2xl">
-            AI decision cockpit for the boardroom — demand, supply, routes, and field execution in one narrative.
+            One operating layer for demand, replenishment, routing, execution, and governance.
           </h2>
           <p className="mt-2 max-w-2xl text-sm text-muted">
-            Premium demo for <span className="text-ivory/90">Olayan Group / GTC</span>. Synthetic signals only; no backend required.
+            Built for <span className="text-ivory/90">Olayan Group / GTC</span> operations.
           </p>
         </div>
         <div className="flex flex-shrink-0 flex-wrap items-center gap-2">
           <span className="rounded-full border border-emerald/35 bg-emerald/10 px-3 py-1.5 text-[11px] font-medium text-emerald">Models active</span>
-          <span className="rounded-full border border-electric/35 bg-electric/10 px-3 py-1.5 text-[11px] font-medium text-electric">Demo dataset</span>
           <span className="rounded-full border border-ivory/15 bg-ivory/[0.06] px-3 py-1.5 text-[11px] font-medium text-ivory/85">Live reasoning panel →</span>
         </div>
       </div>

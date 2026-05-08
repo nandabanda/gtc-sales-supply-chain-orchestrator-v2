@@ -112,9 +112,7 @@ export function SalesmanCoachingIntelligence() {
           </div>
           <div>
             <h3 className="text-[10px] font-semibold uppercase tracking-[0.28em] text-electric">Salesman productivity & coaching intelligence</h3>
-            <p className="mt-2 max-w-3xl text-sm text-muted">
-              Supervisors diagnose underperformance across strike rate, basket, SKU mix, coverage, van alignment, and supply vs credit friction — synthetic demo model (no backend).
-            </p>
+            <p className="mt-2 max-w-3xl text-sm text-muted">Supervisors diagnose underperformance across strike rate, basket, SKU mix, coverage, van alignment, and supply vs credit friction.</p>
           </div>
         </div>
 
