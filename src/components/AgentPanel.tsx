@@ -37,6 +37,7 @@ export function AgentPanel() {
   const isReplenishment = pathname === "/replenishment-orchestrator";
   const isRouteIntelligence = pathname === "/route-intelligence";
   const isExecutionIntelligence = pathname === "/execution-intelligence";
+  const isActionBoard = pathname === "/ai-action-board";
 
   const liveSignals = useMemo(
     () =>
@@ -80,6 +81,14 @@ export function AgentPanel() {
                   { label: "S-03 issue is supply-led, not salesman-led", chip: "Supply" },
                   { label: "6 must-sell SKU gaps need correction", chip: "SKU" },
                 ]
+              : isActionBoard
+                ? [
+                    { label: "4 approvals are pending", chip: "Approve" },
+                    { label: "2 actions are overdue", chip: "Overdue" },
+                    { label: "SAR 1.04M value is at stake", chip: "Value" },
+                    { label: "ACT-006 has highest expiry-loss impact", chip: "ACT-006" },
+                    { label: "ACT-003 should be approved before dispatch", chip: "ACT-003" },
+                  ]
         : [
             { label: "14 customers at stockout risk", chip: "Stockout" },
             { label: "5 SKUs with expiry exposure", chip: "Expiry" },
@@ -87,7 +96,7 @@ export function AgentPanel() {
             { label: "2 vans underloaded before dispatch", chip: "Vans" },
             { label: "9 open actions need closure", chip: "Actions" },
           ],
-    [isCommandCenter, isDemandIntelligence, isReplenishment, isRouteIntelligence, isExecutionIntelligence],
+    [isCommandCenter, isDemandIntelligence, isReplenishment, isRouteIntelligence, isExecutionIntelligence, isActionBoard],
   );
 
   const diagnosisText = isCommandCenter
@@ -100,6 +109,8 @@ export function AgentPanel() {
           ? "Route risk is concentrated in R-12 and R-07. Move high-value and SLA-risk customers earlier, confirm van load readiness, and approve sequence changes before dispatch."
           : isExecutionIntelligence
             ? "Execution risk is concentrated in S-04, S-09, and missed high-value customers. Separate true coaching issues from supply constraints before taking action."
+            : isActionBoard
+              ? "Most value is blocked in approvals. Close SKU-118 rebalance, R-12 route sequence, and SKU-330 load freeze before dispatch to protect revenue and reduce expiry loss."
       : "GTC has three immediate risks: stockouts on high-demand routes, expiry exposure on slow-moving SKUs, and execution gaps in selected routes. The system recommends correcting van loads, rebalancing stock, and closing supervisor actions before dispatch.";
 
   const recommendedNextAction = isCommandCenter
@@ -112,6 +123,8 @@ export function AgentPanel() {
           ? "Approve R-12 sequence and move C-392 and C-310 before 10:00 AM."
           : isExecutionIntelligence
             ? "Schedule S-04 ride-along, protect C-184 recovery visit, and correct supply mismatch for S-03."
+            : isActionBoard
+              ? "Approve ACT-006 and ACT-003 first. They protect the highest value and unblock supply and route execution."
       : "Close urgent supervisor actions today.";
 
   const impactChips = isDemandIntelligence
@@ -142,6 +155,13 @@ export function AgentPanel() {
               "+6–10 pp strike improvement for S-04",
               "6 must-sell gaps corrected",
             ] as const)
+          : isActionBoard
+            ? ([
+                "SAR 1.04M value governed",
+                "SAR 338K inventory risk controlled",
+                "SAR 180K route revenue protected",
+                "4 approvals cleared",
+              ] as const)
     : ([
         "SAR 420K revenue protected",
         "SAR 210K expiry loss avoided",
@@ -161,8 +181,10 @@ export function AgentPanel() {
               ? ["Which route needs resequencing?", "Which customer should be visited first?", "Which approval is pending?"]
               : isExecutionIntelligence
                 ? ["Which salesman needs coaching?", "Which customer needs recovery?", "Which issue is supply-led?"]
+                : isActionBoard
+                  ? ["Which action should I approve first?", "Which action is overdue?", "What value is at stake?"]
           : ["Which route needs action today?", "What should we load tomorrow?", "Which customer is at risk?"],
-    [isCommandCenter, isDemandIntelligence, isReplenishment, isRouteIntelligence, isExecutionIntelligence],
+    [isCommandCenter, isDemandIntelligence, isReplenishment, isRouteIntelligence, isExecutionIntelligence, isActionBoard],
   );
 
   return (
@@ -207,6 +229,8 @@ export function AgentPanel() {
                         ? "Route actions before dispatch"
                         : isExecutionIntelligence
                           ? "Execution actions for supervisors"
+                          : isActionBoard
+                            ? "Actions that need closure today"
                       : "What needs attention today"}
               </p>
             </div>
