@@ -1,5 +1,5 @@
+import { ReplenishmentEngine } from "@/components/ReplenishmentEngine";
 import { PageTitle } from "@/components/Cards";
-import { ReplenishmentWorkspace } from "@/components/ReplenishmentWorkspace";
 
 export default function ReplenishmentOrchestrator() {
   return (
@@ -7,10 +7,9 @@ export default function ReplenishmentOrchestrator() {
       <PageTitle
         eyebrow="Supply Planning"
         title="Replenishment Orchestrator"
-        subtitle="Decide what to supply, restrict, rebalance, and approve before dispatch."
+        subtitle="ROP-based planning engine that decides what to supply, how much to order, what to cap, and what needs controller review before dispatch."
       />
-
-      <ReplenishmentWorkspace />
+      <ReplenishmentEngine />
     </>
   );
 }

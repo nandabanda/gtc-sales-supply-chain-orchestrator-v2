@@ -99,7 +99,7 @@ export function computeVanLoading(row: VanLoadingSeedRow): VanLoadingComputation
   const mustLoadFlag =
     (row.routeProductivityIndex >= 78 && stockout >= 52) || stockout >= 68 || (row.customerPriority === "High" && stockout >= 55);
 
-  const reduceLoadFlag = overstock >= 52 || (row.skuVelocityIndex < 42 && row.daysOfCoverEstimate > 8);
+  const reduceLoadFlag = overstock >= 52 || (row.skuVelocityIndex < 42 && replen.daysCover > 8);
 
   const expiryLiquidationFlag =
     (expiry >= 56 && row.skuVelocityIndex >= 72 && row.route !== "R-12") ||
