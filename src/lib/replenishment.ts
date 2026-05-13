@@ -204,3 +204,22 @@ export type ReplenishmentRowView = ReplenishmentEngineInputRow & ReplenishmentCo
 export function buildReplenishmentRows(seed: ReplenishmentEngineInputRow[]): ReplenishmentRowView[] {
   return seed.map((row) => ({ ...row, ...computeReplenishment(row) }));
 }
+
+export function replenishmentExecutiveKpis(rows: ReplenishmentRowView[]) {
+  const safeAvg = (values: number[]) =>
+    values.length ? Math.round(values.reduce((sum, value) => sum + value, 0) / values.length) : 0;
+
+  const lanesBelowRop = rows.filter((row) => row.netAvailableStock < row.reorderPoint).length;
+  const totalMoqSuggestedCases = rows.reduce((sum, row) => sum + row.suggestedQty, 0);
+  const avgEoqReferenceCases = safeAvg(rows.map((row) => row.eoq));
+  const avgEngineConfidence = safeAvg(rows.map((row) => row.confidenceScore));
+  const avgPipelineCoverDays = safeAvg(rows.map((row) => row.daysCover));
+
+  return {
+    lanesBelowRop,
+    totalMoqSuggestedCases,
+    avgEoqReferenceCases,
+    avgEngineConfidence,
+    avgPipelineCoverDays,
+  };
+}
