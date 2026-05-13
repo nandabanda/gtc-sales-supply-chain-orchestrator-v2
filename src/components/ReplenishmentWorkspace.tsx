@@ -90,7 +90,7 @@ export function ReplenishmentWorkspace() {
         </div>
       </section>
 
-      <ReplenishmentEngine rows={rows} />
+      <ReplenishmentEngine />
 
       <section>
         <h3 className="mb-4 text-[10px] font-semibold uppercase tracking-[0.26em] text-electric">Supplier PO Suggestions</h3>
