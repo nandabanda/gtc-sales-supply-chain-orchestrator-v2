@@ -1,6 +1,6 @@
 /**
- * Synthetic inputs for customer-level replenishment orchestration (GTC demo).
- * Values are illustrative; `computeReplenishment` in lib applies business rules.
+ * Customer × SKU replenishment inputs for GTC-style FMCG distribution (KSA routes, SAR pricing).
+ * `computeReplenishment` applies ROP, MOQ, EOQ, and secondary credit / expiry / van rules.
  */
 
 export type CreditTier = "Low" | "Medium" | "High";
@@ -10,26 +10,51 @@ export type ExpirySensitivity = "High" | "Medium" | "Low";
 export type ReplenishmentEngineInputRow = {
   customerDisplay: string;
   route: string;
+  /** Legacy display string — often matches `skuCode` + pack description */
   sku: string;
   creditRisk: CreditTier;
   customerPriority: Priority;
-  /** Rolling average units per week (cases) */
+  /** Rolling average units per week (cases) — retained for van-loading and trend context */
   historicalAvgWeeklySales: number;
   /** Recent vs historical demand multiplier (e.g. 1.2 = +20%) */
   recentTrendFactor: number;
   /** 0–100 SKU velocity index */
   skuVelocityIndex: number;
-  /** Estimated on-hand at outlet + in-transit (cases) */
+  /** Legacy outlet on-hand estimate (cases); kept aligned with `currentStockCases` where possible */
   currentStockEstimate: number;
-  /** Estimated days of cover at current run-rate */
+  /** Estimated days of cover at current run-rate (legacy / sanity check) */
   daysOfCoverEstimate: number;
   expirySensitivity: ExpirySensitivity;
-  /** Route / field productivity 0–100 */
   routeProductivityIndex: number;
   vanId: string;
-  /** Current van load vs capacity, 0–100 */
   vanLoadUtilizationPct: number;
   vanCapacityCases: number;
+
+  skuCode: string;
+  skuName: string;
+  brand: string;
+  category: string;
+  packSize: string;
+  supplierName: string;
+  leadTimeDays: number;
+  moqCases: number;
+  purchasePrice: number;
+  sellingPrice: number;
+  shelfLifeDays: number;
+  remainingShelfLifeDays: number;
+  /** Measured average daily sales at outlet (cases / day) */
+  historicalDailySales: number;
+  /** Daily demand standard deviation (cases) */
+  demandStdDev: number;
+  currentStockCases: number;
+  inTransitCases: number;
+  openPoCases: number;
+  pendingSalesOrderCases: number;
+  /** Z for cycle service level (e.g. 1.65 ≈ 95%) */
+  serviceLevelZ: number;
+  annualDemandCases: number;
+  orderingCost: number;
+  holdingCostPerCase: number;
 };
 
 export const replenishmentEngineSeed: ReplenishmentEngineInputRow[] = [
@@ -49,6 +74,28 @@ export const replenishmentEngineSeed: ReplenishmentEngineInputRow[] = [
     vanId: "V-07",
     vanLoadUtilizationPct: 78,
     vanCapacityCases: 420,
+    skuCode: "SKU-204",
+    skuName: "Cola PET 250ml",
+    brand: "GTC Beverages",
+    category: "Carbonated soft drinks",
+    packSize: "24×250ml",
+    supplierName: "Aujan Coca-Cola Beverages — Jeddah DC",
+    leadTimeDays: 3,
+    moqCases: 8,
+    purchasePrice: 42.5,
+    sellingPrice: 58.0,
+    shelfLifeDays: 270,
+    remainingShelfLifeDays: 210,
+    historicalDailySales: 3.45,
+    demandStdDev: 0.62,
+    currentStockCases: 6,
+    inTransitCases: 4,
+    openPoCases: 0,
+    pendingSalesOrderCases: 2,
+    serviceLevelZ: 1.65,
+    annualDemandCases: 1260,
+    orderingCost: 180,
+    holdingCostPerCase: 2.1,
   },
   {
     customerDisplay: "C-392 | Riyadh Grocery",
@@ -66,6 +113,28 @@ export const replenishmentEngineSeed: ReplenishmentEngineInputRow[] = [
     vanId: "V-12",
     vanLoadUtilizationPct: 71,
     vanCapacityCases: 400,
+    skuCode: "SKU-118",
+    skuName: "Chilled juice 1L",
+    brand: "Nada",
+    category: "Chilled juice",
+    packSize: "12×1L",
+    supplierName: "Almarai — Riyadh Chilled DC",
+    leadTimeDays: 2,
+    moqCases: 6,
+    purchasePrice: 54.0,
+    sellingPrice: 72.5,
+    shelfLifeDays: 45,
+    remainingShelfLifeDays: 22,
+    historicalDailySales: 2.35,
+    demandStdDev: 0.48,
+    currentStockCases: 10,
+    inTransitCases: 0,
+    openPoCases: 6,
+    pendingSalesOrderCases: 0,
+    serviceLevelZ: 1.65,
+    annualDemandCases: 858,
+    orderingCost: 220,
+    holdingCostPerCase: 3.4,
   },
   {
     customerDisplay: "C-081 | City Convenience",
@@ -83,6 +152,28 @@ export const replenishmentEngineSeed: ReplenishmentEngineInputRow[] = [
     vanId: "V-03",
     vanLoadUtilizationPct: 84,
     vanCapacityCases: 380,
+    skuCode: "SKU-330",
+    skuName: "Fresh milk 500ml",
+    brand: "Almarai",
+    category: "Dairy chilled",
+    packSize: "12×500ml",
+    supplierName: "Almarai — Dammam dairy hub",
+    leadTimeDays: 2,
+    moqCases: 12,
+    purchasePrice: 36.2,
+    sellingPrice: 48.0,
+    shelfLifeDays: 14,
+    remainingShelfLifeDays: 6,
+    historicalDailySales: 1.12,
+    demandStdDev: 0.35,
+    currentStockCases: 14,
+    inTransitCases: 8,
+    openPoCases: 0,
+    pendingSalesOrderCases: 1,
+    serviceLevelZ: 1.28,
+    annualDemandCases: 408,
+    orderingCost: 160,
+    holdingCostPerCase: 2.8,
   },
   {
     customerDisplay: "C-455 | Express Mart",
@@ -100,6 +191,28 @@ export const replenishmentEngineSeed: ReplenishmentEngineInputRow[] = [
     vanId: "V-18",
     vanLoadUtilizationPct: 88,
     vanCapacityCases: 450,
+    skuCode: "SKU-090",
+    skuName: "Drinking water 600ml",
+    brand: "Nova",
+    category: "Water",
+    packSize: "24×600ml",
+    supplierName: "Hana Water — 2nd Industrial Riyadh",
+    leadTimeDays: 4,
+    moqCases: 10,
+    purchasePrice: 18.5,
+    sellingPrice: 26.0,
+    shelfLifeDays: 730,
+    remainingShelfLifeDays: 540,
+    historicalDailySales: 5.78,
+    demandStdDev: 0.95,
+    currentStockCases: 18,
+    inTransitCases: 12,
+    openPoCases: 0,
+    pendingSalesOrderCases: 3,
+    serviceLevelZ: 1.65,
+    annualDemandCases: 2110,
+    orderingCost: 140,
+    holdingCostPerCase: 0.9,
   },
   {
     customerDisplay: "C-216 | Family Store",
@@ -117,6 +230,28 @@ export const replenishmentEngineSeed: ReplenishmentEngineInputRow[] = [
     vanId: "V-07",
     vanLoadUtilizationPct: 78,
     vanCapacityCases: 420,
+    skuCode: "SKU-155",
+    skuName: "Mixed snack multipack",
+    brand: "GTC Snacks",
+    category: "Impulse snacks",
+    packSize: "18×40g",
+    supplierName: "Savola Foods — snacks consolidation",
+    leadTimeDays: 5,
+    moqCases: 4,
+    purchasePrice: 62.0,
+    sellingPrice: 84.0,
+    shelfLifeDays: 180,
+    remainingShelfLifeDays: 140,
+    historicalDailySales: 1.49,
+    demandStdDev: 0.41,
+    currentStockCases: 8,
+    inTransitCases: 0,
+    openPoCases: 4,
+    pendingSalesOrderCases: 0,
+    serviceLevelZ: 1.28,
+    annualDemandCases: 544,
+    orderingCost: 150,
+    holdingCostPerCase: 2.4,
   },
   {
     customerDisplay: "C-091 | Oasis Corner Shop",
@@ -134,6 +269,28 @@ export const replenishmentEngineSeed: ReplenishmentEngineInputRow[] = [
     vanId: "V-03",
     vanLoadUtilizationPct: 84,
     vanCapacityCases: 380,
+    skuCode: "SKU-118",
+    skuName: "Chilled juice 1L",
+    brand: "Nada",
+    category: "Chilled juice",
+    packSize: "12×1L",
+    supplierName: "Almarai — Riyadh Chilled DC",
+    leadTimeDays: 2,
+    moqCases: 6,
+    purchasePrice: 54.0,
+    sellingPrice: 72.5,
+    shelfLifeDays: 45,
+    remainingShelfLifeDays: 11,
+    historicalDailySales: 0.74,
+    demandStdDev: 0.28,
+    currentStockCases: 11,
+    inTransitCases: 0,
+    openPoCases: 0,
+    pendingSalesOrderCases: 0,
+    serviceLevelZ: 1.04,
+    annualDemandCases: 270,
+    orderingCost: 220,
+    holdingCostPerCase: 3.4,
   },
   {
     customerDisplay: "C-220 | Metro Wholesale Mini",
@@ -151,6 +308,28 @@ export const replenishmentEngineSeed: ReplenishmentEngineInputRow[] = [
     vanId: "V-09",
     vanLoadUtilizationPct: 58,
     vanCapacityCases: 410,
+    skuCode: "SKU-102",
+    skuName: "Energy drink 250ml",
+    brand: "Power Malt",
+    category: "Energy drinks",
+    packSize: "24×250ml",
+    supplierName: "Aujan — Hail staging",
+    leadTimeDays: 4,
+    moqCases: 8,
+    purchasePrice: 48.0,
+    sellingPrice: 66.0,
+    shelfLifeDays: 365,
+    remainingShelfLifeDays: 280,
+    historicalDailySales: 2.92,
+    demandStdDev: 0.71,
+    currentStockCases: 4,
+    inTransitCases: 0,
+    openPoCases: 0,
+    pendingSalesOrderCases: 6,
+    serviceLevelZ: 1.65,
+    annualDemandCases: 1066,
+    orderingCost: 190,
+    holdingCostPerCase: 2.0,
   },
   {
     customerDisplay: "C-502 | Northern Express",
@@ -168,16 +347,38 @@ export const replenishmentEngineSeed: ReplenishmentEngineInputRow[] = [
     vanId: "V-09",
     vanLoadUtilizationPct: 58,
     vanCapacityCases: 410,
+    skuCode: "SKU-204",
+    skuName: "Cola PET 250ml",
+    brand: "GTC Beverages",
+    category: "Carbonated soft drinks",
+    packSize: "24×250ml",
+    supplierName: "Aujan Coca-Cola Beverages — Jeddah DC",
+    leadTimeDays: 3,
+    moqCases: 8,
+    purchasePrice: 42.5,
+    sellingPrice: 58.0,
+    shelfLifeDays: 270,
+    remainingShelfLifeDays: 190,
+    historicalDailySales: 2.7,
+    demandStdDev: 0.44,
+    currentStockCases: 12,
+    inTransitCases: 6,
+    openPoCases: 8,
+    pendingSalesOrderCases: 2,
+    serviceLevelZ: 1.28,
+    annualDemandCases: 986,
+    orderingCost: 180,
+    holdingCostPerCase: 2.1,
   },
 ];
 
 export const aiReplenishmentDecisions: string[] = [
-  "Increase SKU-102 for Customer C-184 on Route R-07 due to high recent demand and low estimated stock.",
-  "Reduce SKU-118 allocation for Customer C-091 due to slow movement and expiry exposure.",
-  "Cap replenishment for Customer C-220 due to high credit risk pending collections review.",
-  "Add fast-moving SKU-204 to Van V-09 to improve load utilization ahead of R-12 and R-22 dispatches.",
-  "Rebalance near-expiry stock from low-velocity Route R-03 to high-velocity Route R-12 on the next inter-depot transfer.",
-  "Prioritize early pick-wave for SKU-118 on R-12 to protect high-priority Riyadh Grocery while chilled age bands are elevated.",
-  "Hold incremental issue for SKU-330 at City Convenience until velocity recovers — recommend swap volume to Express Mart spike lane.",
-  "Escalate R-07 manifest alignment: suggested cola uplift for C-184 conflicts with current van cube; rebalance with controller sign-off.",
+  "R-07 / C-184: ROP breach on SKU-204 — publish wave-1 pick before 06:00 and confirm V-07 cube for +8 cases MOQ ladder.",
+  "R-12 / C-392: Chilled SKU-118 — approve Almarai DC release; net available sits below ROP once open PO lands.",
+  "R-03 / C-081: SKU-330 short shelf + high cover — hold incremental PO; rebalance to promo-led R-12 lane first.",
+  "R-18 / C-455: SKU-090 spike — EOQ suggests larger PO blocks; align Hana Water truck with Thursday R-18 dispatch.",
+  "R-07 / C-216: SKU-155 within ROP band — maintain MOQ-only top-up unless snack promo lifts ADS next cycle.",
+  "R-03 / C-091: SKU-118 slow velocity + expiry band — cap MOQ uplift; inventory controller sign-off on write-off risk.",
+  "R-12 / C-220: SKU-102 credit tier High — finance release before PO; pending SO consumes net available.",
+  "R-22 / C-502: SKU-204 healthy pipeline — consolidate Aujan PO to EOQ band and fill V-09 underutilized cube.",
 ];

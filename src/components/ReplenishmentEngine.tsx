@@ -3,8 +3,8 @@
 import { useMemo, useState } from "react";
 import { Filter } from "lucide-react";
 import { cn } from "@/lib/utils";
-import { buildReplenishmentRows, type ReplenishmentRowView, type RiskLevel } from "@/lib/replenishment";
-import { aiReplenishmentDecisions, replenishmentEngineSeed } from "@/data/replenishmentEngineSeed";
+import type { ReplenishmentRowView, RiskLevel } from "@/lib/replenishment";
+import { aiReplenishmentDecisions } from "@/data/replenishmentEngineSeed";
 
 function RiskBadge({ level }: { level: RiskLevel }) {
   const map: Record<RiskLevel, string> = {
@@ -26,36 +26,7 @@ function PctRisk({ value }: { value: number }) {
   return <span className={cn("tabular-nums font-semibold", tone)}>{value}%</span>;
 }
 
-function SummaryCard({
-  label,
-  value,
-  hint,
-  tone = "electric",
-}: {
-  label: string;
-  value: string | number;
-  hint?: string;
-  tone?: "electric" | "amber" | "danger" | "emerald";
-}) {
-  const ring: Record<string, string> = {
-    electric: "from-electric/80 to-electric/20",
-    amber: "from-amber/80 to-amber/20",
-    danger: "from-danger/80 to-danger/20",
-    emerald: "from-emerald/80 to-emerald/20",
-  };
-  return (
-    <div className="relative overflow-hidden rounded-2xl border border-ivory/10 bg-[#0a121c] p-5 shadow-[0_16px_48px_rgba(0,0,0,0.35)] ring-1 ring-ivory/[0.05]">
-      <div className={cn("absolute left-0 top-0 h-full w-1 bg-gradient-to-b", ring[tone])} aria-hidden />
-      <p className="pl-3 text-[10px] font-semibold uppercase tracking-[0.22em] text-ivory/45">{label}</p>
-      <p className="mt-2 pl-3 text-2xl font-semibold tabular-nums text-ivory">{value}</p>
-      {hint && <p className="mt-1.5 pl-3 text-xs text-ivory/50">{hint}</p>}
-    </div>
-  );
-}
-
-export function ReplenishmentEngine() {
-  const allRows = useMemo(() => buildReplenishmentRows(replenishmentEngineSeed), []);
-
+export function ReplenishmentEngine({ rows: allRows }: { rows: ReplenishmentRowView[] }) {
   const routes = useMemo(() => ["All", ...Array.from(new Set(allRows.map((r) => r.route))).sort()], [allRows]);
   const riskLevels: Array<RiskLevel | "All"> = ["All", "High", "Medium", "Low"];
 
@@ -69,7 +40,7 @@ export function ReplenishmentEngine() {
       if (routeFilter !== "All" && r.route !== routeFilter) return false;
       if (riskFilter !== "All" && r.riskLevel !== riskFilter) return false;
       if (customerFilter.trim() && !r.customerDisplay.toLowerCase().includes(customerFilter.toLowerCase().trim())) return false;
-      if (skuFilter.trim() && !r.sku.toLowerCase().includes(skuFilter.toLowerCase().trim())) return false;
+      if (skuFilter.trim() && !`${r.skuCode} ${r.skuName}`.toLowerCase().includes(skuFilter.toLowerCase().trim())) return false;
       return true;
     });
   }, [allRows, routeFilter, customerFilter, skuFilter, riskFilter]);
@@ -79,21 +50,16 @@ export function ReplenishmentEngine() {
   return (
     <div className="space-y-8">
       <section>
-        <h3 className="text-[10px] font-semibold uppercase tracking-[0.28em] text-electric">Replenishment engine</h3>
+        <h3 className="text-[10px] font-semibold uppercase tracking-[0.28em] text-electric">Replenishment recommendations</h3>
         <p className="mt-2 max-w-3xl text-sm text-muted">
-          Customer-level suggestions from demand, cover, credit, expiry, route productivity, and van utilization.
+          ROP-first engine (ADS, lead-time demand, safety stock, MOQ, EOQ). Credit, expiry, and van signals cap or explain variance.
         </p>
-        <div className="mt-5 grid gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5">
-          <SummaryCard label="Customers needing replenishment" value={kpis.needingReplenishment} hint="Suggested qty ≥ 4 cases" tone="electric" />
-          <SummaryCard label="Stockout risk customers" value={kpis.stockoutRisky} hint="Stockout risk ≥ 55%" tone="danger" />
-          <SummaryCard label="Expiry risk SKUs" value={kpis.expiryRisky} hint="Expiry risk ≥ 55%" tone="amber" />
-          <SummaryCard label="Credit-capped recommendations" value={kpis.creditCapped} hint="Supply limited by credit tier" tone="amber" />
-          <SummaryCard
-            label="Van load improvement opportunity"
-            value={kpis.vanOpportunity}
-            hint="Vans under 72% utilization"
-            tone="emerald"
-          />
+        <div className="mt-5 grid gap-4 sm:grid-cols-2 lg:grid-cols-4 xl:grid-cols-5">
+          <MiniKpi label="Lanes with pick signal" value={kpis.needingReplenishment} hint="Suggested qty &gt; 0" />
+          <MiniKpi label="Stockout risk (engine)" value={kpis.stockoutRisky} hint="Risk ≥ 55%" tone="danger" />
+          <MiniKpi label="Expiry risk" value={kpis.expiryRisky} hint="Risk ≥ 55%" tone="amber" />
+          <MiniKpi label="Credit-capped" value={kpis.creditCapped} hint="Tier ceiling hit" tone="amber" />
+          <MiniKpi label="Vans &lt; 72% util" value={kpis.vanOpportunity} hint="Fill opportunity" tone="electric" />
         </div>
       </section>
 
@@ -103,7 +69,9 @@ export function ReplenishmentEngine() {
             <Filter className="h-4 w-4 text-electric" strokeWidth={1.75} />
             <h4 className="text-sm font-semibold text-ivory">Filters</h4>
           </div>
-          <p className="text-xs text-ivory/45">{filteredRows.length} of {allRows.length} rows</p>
+          <p className="text-xs text-ivory/45">
+            {filteredRows.length} of {allRows.length} lanes
+          </p>
         </div>
         <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-4">
           <label className="block text-[10px] font-semibold uppercase tracking-[0.18em] text-ivory/45">
@@ -134,7 +102,7 @@ export function ReplenishmentEngine() {
             <input
               value={skuFilter}
               onChange={(e) => setSkuFilter(e.target.value)}
-              placeholder="Contains…"
+              placeholder="Code or name…"
               className="mt-1.5 w-full rounded-xl border border-ivory/15 bg-[#0a121c] px-3 py-2.5 text-sm text-ivory placeholder:text-ivory/35 outline-none ring-1 ring-black/20 focus:border-electric/40"
             />
           </label>
@@ -159,29 +127,35 @@ export function ReplenishmentEngine() {
         <div className="border-b border-ink/10 bg-ivory px-4 py-3 sm:px-5">
           <div className="flex items-center gap-2">
             <div className="h-6 w-1 rounded-full bg-gradient-to-b from-electric to-electric/30" aria-hidden />
-            <h4 className="text-sm font-semibold text-ink">Replenishment recommendations</h4>
+            <h4 className="text-sm font-semibold text-ink">ROP replenishment table</h4>
           </div>
         </div>
         <div className="overflow-x-auto">
-          <table className="w-full min-w-[1200px] border-collapse text-left text-sm">
+          <table className="w-full min-w-[2200px] border-collapse text-left text-sm">
             <thead className="bg-ink/[0.04] text-[10px] font-semibold uppercase tracking-wider text-ink/55">
               <tr>
                 {[
                   "Customer",
                   "Route",
                   "SKU",
-                  "Current stock",
-                  "Suggested qty",
+                  "ADS",
+                  "Current",
+                  "In-transit",
+                  "Open PO",
+                  "Pending SO",
+                  "Net avail.",
+                  "Days cover",
+                  "LT (d)",
+                  "Safety stk",
+                  "ROP",
+                  "Raw reorder",
+                  "MOQ qty",
+                  "Supplier",
                   "Risk",
-                  "Stockout",
-                  "Overstock",
-                  "Expiry",
-                  "Credit",
-                  "Van load",
                   "Action",
-                  "Confidence",
+                  "Conf.",
                 ].map((h) => (
-                  <th key={h} className="whitespace-nowrap px-3 py-3 font-medium">
+                  <th key={h} className="whitespace-nowrap px-2 py-3 font-medium">
                     {h}
                   </th>
                 ))}
@@ -189,36 +163,54 @@ export function ReplenishmentEngine() {
             </thead>
             <tbody>
               {filteredRows.map((r, idx) => (
-                <tr key={`${r.customerDisplay}-${r.sku}-${idx}`} className="border-t border-ink/[0.07] hover:bg-ink/[0.02]">
-                  <td className="max-w-[200px] px-3 py-3 font-medium text-ink/90">{r.customerDisplay}</td>
-                  <td className="whitespace-nowrap px-3 py-3 text-ink/85">{r.route}</td>
-                  <td className="max-w-[160px] px-3 py-3 text-ink/85">{r.sku}</td>
-                  <td className="whitespace-nowrap px-3 py-3 tabular-nums">{r.currentStockEstimate}</td>
-                  <td className="whitespace-nowrap px-3 py-3 tabular-nums font-semibold text-ink">{r.suggestedQty}</td>
-                  <td className="px-3 py-3">
+                <tr key={`${r.customerDisplay}-${r.skuCode}-${idx}`} className="border-t border-ink/[0.07] align-top hover:bg-ink/[0.02]">
+                  <td className="max-w-[200px] px-2 py-3 font-medium text-ink/90">{r.customerDisplay}</td>
+                  <td className="whitespace-nowrap px-2 py-3 text-ink/85">{r.route}</td>
+                  <td className="max-w-[140px] px-2 py-3 text-xs leading-snug text-ink/85">
+                    <span className="font-semibold text-ink">{r.skuCode}</span>
+                    <br />
+                    {r.skuName}
+                  </td>
+                  <td className="whitespace-nowrap px-2 py-3 tabular-nums">{r.ads.toFixed(2)}</td>
+                  <td className="whitespace-nowrap px-2 py-3 tabular-nums">{r.currentStockCases}</td>
+                  <td className="whitespace-nowrap px-2 py-3 tabular-nums">{r.inTransitCases}</td>
+                  <td className="whitespace-nowrap px-2 py-3 tabular-nums">{r.openPoCases}</td>
+                  <td className="whitespace-nowrap px-2 py-3 tabular-nums">{r.pendingSalesOrderCases}</td>
+                  <td className="whitespace-nowrap px-2 py-3 tabular-nums font-medium">{Math.round(r.netAvailableStock)}</td>
+                  <td className="whitespace-nowrap px-2 py-3 tabular-nums">{r.daysOfCover.toFixed(1)}</td>
+                  <td className="whitespace-nowrap px-2 py-3 tabular-nums">{r.leadTimeDays}</td>
+                  <td className="whitespace-nowrap px-2 py-3 tabular-nums">{r.safetyStock.toFixed(1)}</td>
+                  <td className="whitespace-nowrap px-2 py-3 tabular-nums font-semibold text-electric">{Math.round(r.reorderPoint)}</td>
+                  <td className="whitespace-nowrap px-2 py-3 tabular-nums">{Math.round(r.suggestedReorderRaw)}</td>
+                  <td className="whitespace-nowrap px-2 py-3 tabular-nums font-semibold">{r.moqAdjustedQty}</td>
+                  <td className="max-w-[200px] px-2 py-3 text-[11px] leading-snug text-ink/75">{r.supplierName}</td>
+                  <td className="px-2 py-3">
                     <RiskBadge level={r.riskLevel} />
+                    <div className="mt-1 flex flex-wrap gap-1 text-[9px] text-ink/50">
+                      <span>
+                        S:<PctRisk value={r.stockoutRisk} />
+                      </span>
+                      <span>
+                        O:<PctRisk value={r.overstockRisk} />
+                      </span>
+                      <span>
+                        E:<PctRisk value={r.expiryRisk} />
+                      </span>
+                      <span>
+                        C:<PctRisk value={r.creditRiskScore} />
+                      </span>
+                    </div>
                   </td>
-                  <td className="whitespace-nowrap px-3 py-3">
-                    <PctRisk value={r.stockoutRisk} />
+                  <td className="max-w-[260px] px-2 py-3 text-xs leading-snug text-ink/85">
+                    <p className="font-medium text-ink">{r.actionRecommendation}</p>
+                    <p className="mt-1 text-[11px] text-ink/55">{r.driverSummary}</p>
+                    <p className="mt-1 text-[11px] text-danger/90">If no action: {r.noActionConsequence}</p>
                   </td>
-                  <td className="whitespace-nowrap px-3 py-3">
-                    <PctRisk value={r.overstockRisk} />
-                  </td>
-                  <td className="whitespace-nowrap px-3 py-3">
-                    <PctRisk value={r.expiryRisk} />
-                  </td>
-                  <td className="whitespace-nowrap px-3 py-3">
-                    <PctRisk value={r.creditRiskScore} />
-                  </td>
-                  <td className="max-w-[220px] px-3 py-3 text-xs leading-snug text-ink/80">{r.vanLoadRecommendation}</td>
-                  <td className="max-w-[260px] px-3 py-3 text-xs leading-snug text-ink/85">{r.actionRecommendation}</td>
-                  <td className="whitespace-nowrap px-3 py-3">
+                  <td className="whitespace-nowrap px-2 py-3">
                     <span
                       className={cn(
                         "inline-flex rounded-full border px-2 py-0.5 text-[11px] font-semibold",
-                        r.reviewRequired
-                          ? "border-amber/50 bg-amber/15 text-ink"
-                          : "border-emerald/40 bg-emerald/12 text-ink",
+                        r.reviewRequired ? "border-amber/50 bg-amber/15 text-ink" : "border-emerald/40 bg-emerald/12 text-ink",
                       )}
                     >
                       {r.confidenceScore}%{r.reviewRequired ? " · Review" : ""}
@@ -229,17 +221,14 @@ export function ReplenishmentEngine() {
             </tbody>
           </table>
         </div>
-        {filteredRows.length === 0 && (
-          <p className="px-5 py-8 text-center text-sm text-ink/55">No rows match the current filters.</p>
-        )}
+        {filteredRows.length === 0 && <p className="px-5 py-8 text-center text-sm text-ink/55">No lanes match filters.</p>}
       </section>
 
       <section>
         <div className="mb-4 flex items-center gap-2">
           <div className="h-6 w-1 rounded-full bg-gradient-to-b from-electric to-electric/30" aria-hidden />
-          <h4 className="text-lg font-semibold text-ivory">AI Replenishment Decisions</h4>
+          <h4 className="text-lg font-semibold text-ivory">Controller narrative queue</h4>
         </div>
-        <p className="mb-4 max-w-3xl text-sm text-muted">Replenishment actions for controller review.</p>
         <ul className="grid gap-3 md:grid-cols-2">
           {aiReplenishmentDecisions.map((line) => (
             <li
@@ -256,8 +245,30 @@ export function ReplenishmentEngine() {
   );
 }
 
+function MiniKpi({
+  label,
+  value,
+  hint,
+  tone = "ivory",
+}: {
+  label: string;
+  value: number;
+  hint: string;
+  tone?: "ivory" | "danger" | "amber" | "electric";
+}) {
+  const valTone =
+    tone === "danger" ? "text-danger" : tone === "amber" ? "text-amber" : tone === "electric" ? "text-electric" : "text-ivory";
+  return (
+    <div className="rounded-2xl border border-ivory/10 bg-[#0a121c] p-4 ring-1 ring-ivory/[0.05]">
+      <p className="text-[10px] font-semibold uppercase tracking-[0.18em] text-ivory/45">{label}</p>
+      <p className={cn("mt-1 text-2xl font-semibold tabular-nums", valTone)}>{value}</p>
+      <p className="mt-1 text-xs text-ivory/50">{hint}</p>
+    </div>
+  );
+}
+
 function computeKpis(rows: ReplenishmentRowView[]) {
-  const needingReplenishment = rows.filter((r) => r.suggestedQty >= 4).length;
+  const needingReplenishment = rows.filter((r) => r.suggestedQty > 0).length;
   const stockoutRisky = rows.filter((r) => r.stockoutRisk >= 55).length;
   const expiryRisky = rows.filter((r) => r.expiryRisk >= 55).length;
   const creditCapped = rows.filter((r) => r.wasCreditCapped).length;
