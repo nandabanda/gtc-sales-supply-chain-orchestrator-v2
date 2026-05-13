@@ -2,10 +2,11 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { Boxes, Brain, ClipboardList, LayoutDashboard, MapPinned, Route, Sparkles } from "lucide-react";
+import { Boxes, Brain, ClipboardList, Database, LayoutDashboard, MapPinned, Route, Sparkles } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 const nav = [
+  { href: "/data-layer", label: "Data Layer", icon: Database },
   { href: "/command-center", label: "Command Center", icon: LayoutDashboard },
   { href: "/demand-intelligence", label: "Demand Intelligence", icon: Brain },
   { href: "/replenishment-orchestrator", label: "Replenishment Orchestrator", icon: Boxes },

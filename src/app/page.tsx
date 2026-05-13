@@ -1,9 +1,15 @@
 import Link from "next/link";
-import { ArrowRight, Brain, Boxes, ClipboardList, LayoutDashboard, MapPinned, Route } from "lucide-react";
+import { ArrowRight, Brain, Boxes, ClipboardList, Database, LayoutDashboard, MapPinned, Route } from "lucide-react";
 import { KPICard, PageTitle } from "@/components/Cards";
 import { cn } from "@/lib/utils";
 
 const modules = [
+  {
+    href: "/data-layer",
+    title: "Gold Data Layer",
+    icon: Database,
+    text: "Certify uploads and validation before intelligence runs.",
+  },
   {
     href: "/command-center",
     title: "Command Center",

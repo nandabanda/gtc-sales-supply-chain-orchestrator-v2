@@ -38,6 +38,7 @@ export function AgentPanel() {
   const isRouteIntelligence = pathname === "/route-intelligence";
   const isExecutionIntelligence = pathname === "/execution-intelligence";
   const isActionBoard = pathname === "/ai-action-board";
+  const isDataLayer = pathname === "/data-layer";
 
   const liveSignals = useMemo(
     () =>
@@ -89,6 +90,14 @@ export function AgentPanel() {
                     { label: "ACT-006 has highest expiry-loss impact", chip: "ACT-006" },
                     { label: "ACT-003 should be approved before dispatch", chip: "ACT-003" },
                   ]
+                : isDataLayer
+                  ? [
+                      { label: "Mandatory files 6 / 8 uploaded", chip: "Upload" },
+                      { label: "14 validation issues in queue", chip: "Rules" },
+                      { label: "11 SKUs missing lead time", chip: "LT" },
+                      { label: "In-transit stock file missing", chip: "Pipeline" },
+                      { label: "Orchestration: Partial Ready", chip: "Status" },
+                    ]
         : [
             { label: "14 customers at stockout risk", chip: "Stockout" },
             { label: "5 SKUs with expiry exposure", chip: "Expiry" },
@@ -96,7 +105,7 @@ export function AgentPanel() {
             { label: "2 vans underloaded before dispatch", chip: "Vans" },
             { label: "9 open actions need closure", chip: "Actions" },
           ],
-    [isCommandCenter, isDemandIntelligence, isReplenishment, isRouteIntelligence, isExecutionIntelligence, isActionBoard],
+    [isCommandCenter, isDemandIntelligence, isReplenishment, isRouteIntelligence, isExecutionIntelligence, isActionBoard, isDataLayer],
   );
 
   const diagnosisText = isCommandCenter
@@ -111,6 +120,8 @@ export function AgentPanel() {
             ? "Execution risk is concentrated in S-04, S-09, and missed high-value customers. Separate true coaching issues from supply constraints before taking action."
             : isActionBoard
               ? "Most value is blocked in approvals. Close SKU-118 rebalance, R-12 route sequence, and SKU-330 load freeze before dispatch to protect revenue and reduce expiry loss."
+              : isDataLayer
+                ? "Replenishment is partially ready. SKU master, sales history and inventory are available, but lead time and MOQ are incomplete for 11 SKUs. This may reduce reorder accuracy and supplier PO confidence. Route intelligence is waiting on van capacity for three routes."
       : "GTC has three immediate risks: stockouts on high-demand routes, expiry exposure on slow-moving SKUs, and execution gaps in selected routes. The system recommends correcting van loads, rebalancing stock, and closing supervisor actions before dispatch.";
 
   const recommendedNextAction = isCommandCenter
@@ -125,6 +136,8 @@ export function AgentPanel() {
             ? "Schedule S-04 ride-along, protect C-184 recovery visit, and correct supply mismatch for S-03."
             : isActionBoard
               ? "Approve ACT-006 and ACT-003 first. They protect the highest value and unblock supply and route execution."
+              : isDataLayer
+                ? "Complete lead time and MOQ for the 11 SKUs, load in-transit stock, and attach van capacity to the three routes — then re-run validation before certifying gold."
       : "Close urgent supervisor actions today.";
 
   const impactChips = isDemandIntelligence
@@ -162,6 +175,13 @@ export function AgentPanel() {
                 "SAR 180K route revenue protected",
                 "4 approvals cleared",
               ] as const)
+            : isDataLayer
+              ? ([
+                  "Readiness score 82%",
+                  "128K records processed",
+                  "2 mandatory files remaining",
+                  "Gold gate opens after LT + in-transit",
+                ] as const)
     : ([
         "SAR 420K revenue protected",
         "SAR 210K expiry loss avoided",
@@ -183,8 +203,10 @@ export function AgentPanel() {
                 ? ["Which salesman needs coaching?", "Which customer needs recovery?", "Which issue is supply-led?"]
                 : isActionBoard
                   ? ["Which action should I approve first?", "Which action is overdue?", "What value is at stake?"]
-          : ["Which route needs action today?", "What should we load tomorrow?", "Which customer is at risk?"],
-    [isCommandCenter, isDemandIntelligence, isReplenishment, isRouteIntelligence, isExecutionIntelligence, isActionBoard],
+                  : isDataLayer
+                    ? ["Which dataset blocks gold certification?", "What fails validation first?", "Is orchestration ready?"]
+                    : ["Which route needs action today?", "What should we load tomorrow?", "Which customer is at risk?"],
+    [isCommandCenter, isDemandIntelligence, isReplenishment, isRouteIntelligence, isExecutionIntelligence, isActionBoard, isDataLayer],
   );
 
   return (
@@ -217,7 +239,9 @@ export function AgentPanel() {
               <Sparkles className="h-5 w-5 text-electric" strokeWidth={1.75} />
             </div>
             <div>
-              <h2 className="text-lg font-semibold leading-tight tracking-tight text-ivory">SYDIAI Intelligence Agent</h2>
+              <h2 className="text-lg font-semibold leading-tight tracking-tight text-ivory">
+                {isDataLayer ? "SYDIAI Data Steward" : "SYDIAI Intelligence Agent"}
+              </h2>
               <p className="mt-1.5 text-xs font-medium leading-relaxed text-ivory/55">
                 {isCommandCenter
                   ? "What needs action today"
@@ -231,6 +255,8 @@ export function AgentPanel() {
                           ? "Execution actions for supervisors"
                           : isActionBoard
                             ? "Actions that need closure today"
+                            : isDataLayer
+                              ? "Data foundation readiness"
                       : "What needs attention today"}
               </p>
             </div>
@@ -260,7 +286,7 @@ export function AgentPanel() {
 
           {/* B. AI Diagnosis */}
           <section>
-            <h3 className="mb-3 text-[10px] font-semibold uppercase tracking-[0.26em] text-ivory/55">AI diagnosis</h3>
+            <h3 className="mb-3 text-[10px] font-semibold uppercase tracking-[0.26em] text-ivory/55">{isDataLayer ? "Steward assessment" : "AI diagnosis"}</h3>
             <IvoryCard>
               <p className="text-sm font-medium leading-relaxed text-ink/88">{diagnosisText}</p>
             </IvoryCard>
@@ -293,7 +319,7 @@ export function AgentPanel() {
           <section className="rounded-2xl border border-ivory/10 bg-ivory/[0.04] p-4 ring-1 ring-ivory/[0.06]">
             <div className="mb-3 flex items-center gap-2 text-ivory/55">
               <MessageSquareText className="h-4 w-4 text-electric" strokeWidth={1.75} />
-              <h3 className="text-[10px] font-semibold uppercase tracking-[0.26em] text-ivory/70">Ask the agent</h3>
+              <h3 className="text-[10px] font-semibold uppercase tracking-[0.26em] text-ivory/70">{isDataLayer ? "Ask the steward" : "Ask the agent"}</h3>
             </div>
             <label htmlFor="agent-ask" className="sr-only">
               Ask the SYDIAI agent

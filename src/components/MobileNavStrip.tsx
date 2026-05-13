@@ -2,6 +2,7 @@ import Link from "next/link";
 
 const links = [
   { href: "/", label: "Overview" },
+  { href: "/data-layer", label: "Data" },
   { href: "/command-center", label: "Command" },
   { href: "/demand-intelligence", label: "Demand" },
   { href: "/replenishment-orchestrator", label: "Replenish" },
