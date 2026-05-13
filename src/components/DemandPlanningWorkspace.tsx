@@ -6,13 +6,7 @@ import { Panel } from "@/components/Cards";
 import { ConfidenceChart, ForecastChart } from "@/components/Charts";
 import { demandForecastSeed, forecastTrendWeekly } from "@/data/demandForecastSeed";
 import type { DemandHorizonDays } from "@/lib/demandPlanning";
-import {
-  aggregateDemandPulse,
-  activeDemandRow,
-  buildDemandMultiSeed,
-  buildDemandReplenishmentHandoff,
-  derivePlanningActions,
-} from "@/lib/demandPlanning";
+import { aggregateDemandPulse, activeDemandRow, buildDemandMultiSeed, derivePlanningActions } from "@/lib/demandPlanning";
 
 function HorizonBtn({
   active,
@@ -56,7 +50,6 @@ export function DemandPlanningWorkspace() {
   const rows = useMemo(() => multi.map((m) => activeDemandRow(m, horizon)), [multi, horizon]);
   const pulse = useMemo(() => aggregateDemandPulse(rows), [rows]);
   const exceptions = useMemo(() => rows.filter((r) => r.underForecastRisk >= 38 || r.overForecastRisk >= 38 || r.confidenceScore < 65), [rows]);
-  const handoff = useMemo(() => buildDemandReplenishmentHandoff(rows), [rows]);
   const planning = useMemo(() => derivePlanningActions(rows), [rows]);
 
   return (
@@ -215,27 +208,6 @@ export function DemandPlanningWorkspace() {
             </table>
           </div>
           {exceptions.length === 0 && <p className="px-5 py-6 text-center text-sm text-ink/55">No exceptions at current thresholds.</p>}
-        </div>
-      </section>
-
-      <section>
-        <h3 className="mb-4 text-[10px] font-semibold uppercase tracking-[0.26em] text-electric">Demand-to-replenishment handoff</h3>
-        <div className="grid gap-4 md:grid-cols-2">
-          {handoff.map((h) => (
-            <div key={`${h.route}-${h.skuCode}`} className="glass rounded-2xl p-5 ring-1 ring-ivory/[0.05]">
-              <p className="text-sm font-semibold text-ivory">
-                {h.skuCode} · {h.route}
-              </p>
-              <p className="mt-2 text-xs text-ivory/65">
-                Horizon forecast <span className="font-medium text-ivory">{Math.round(h.forecastHorizonCases)} cs</span> · fill-corrected{" "}
-                <span className="text-electric">{h.fillCorrectedDailyCases.toFixed(2)} cs/d</span>
-              </p>
-              <p className="mt-3 text-sm font-medium text-ivory/90">{h.replenishmentCue}</p>
-              <p className="mt-2 text-xs text-ivory/50">
-                Owner: <span className="text-ivory/80">{h.owner}</span>
-              </p>
-            </div>
-          ))}
         </div>
       </section>
 
