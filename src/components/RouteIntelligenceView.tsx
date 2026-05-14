@@ -1,6 +1,7 @@
 "use client";
 
 import { useMemo, useState } from "react";
+import { DownloadButton } from "@/components/DownloadButton";
 import { cn } from "@/lib/utils";
 import {
   channels,
@@ -13,6 +14,7 @@ import {
   warehouses,
 } from "@/data/gtcOperationalDemoData";
 import { defaultRouteOpFilters, filterOperationalForRoute, type RouteOpFilters } from "@/lib/gtcOperationalBridge";
+import { objectsToCsvRows } from "@/lib/download";
 
 function FilterSelect({
   label,
@@ -109,6 +111,12 @@ export function RouteIntelligenceView() {
       }));
   }, [rows]);
 
+  const routeFullExportRows = useMemo(() => objectsToCsvRows(rows.map((r) => ({ ...r, csv_section: "Route planning" }))), [rows]);
+  const routeTableExportRows = useMemo(
+    () => objectsToCsvRows(tableRows.map((r) => ({ ...r, csv_section: "Route recommendation" }))),
+    [tableRows],
+  );
+
   const aiRoute = useMemo(() => {
     const r = f.route !== "All Routes" ? f.route : rows[0]?.route ?? "enterprise routes";
     const reg = f.region !== "All Regions" ? f.region : rows[0]?.region ?? "KSA";
@@ -128,6 +136,10 @@ export function RouteIntelligenceView() {
           <FilterSelect label="Delivery risk" value={f.deliveryRisk} onChange={set("deliveryRisk")} options={deliveryRiskFilters} />
         </div>
         <p className="mt-3 text-xs text-muted">{gtcOperationalDataDisclaimer}</p>
+        <div className="mt-3 flex flex-wrap justify-end gap-2">
+          <DownloadButton label="Download Current View" filename="gtc-route-planning-view.csv" rows={routeFullExportRows} />
+          <DownloadButton label="Export Table" filename="gtc-route-recommendations-table.csv" rows={routeTableExportRows} variant="ghost" />
+        </div>
       </section>
 
       <section>

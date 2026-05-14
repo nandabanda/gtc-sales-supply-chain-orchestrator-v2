@@ -1,6 +1,5 @@
 "use client";
 
-import { useMemo, useState } from "react";
 import { Panel } from "@/components/Cards";
 import {
   ForecastChart,
@@ -8,39 +7,18 @@ import {
   GrowthBarChart,
   SkuRiskScatter,
 } from "@/components/Charts";
+import { useDemandPlanningSession } from "@/components/DemandPlanningSessionContext";
 import {
   brands,
   categories,
   channels,
-  demoOperationalRows,
   demoSkuFilterOptions,
   gtcOperationalDataDisclaimer,
   regions,
   routes,
 } from "@/data/gtcOperationalDemoData";
 import { cn } from "@/lib/utils";
-import {
-  buildCompactDemandHandoffTable,
-  buildDemandAiPlannerSummary,
-  buildDemandForecastExceptions,
-  filterOperationalForDemand,
-  operationalRowsToDemandRows,
-} from "@/lib/gtcOperationalBridge";
-import {
-  buildAccuracyHeatmap,
-  buildForecastVsActualByDim,
-  buildForecastVsActualWeekly,
-  buildPlannerNarrative,
-  buildSkuRiskMatrix,
-  computeDrillKpis,
-  defaultDrillFilters,
-  growthByDimension,
-  heatmapCategories,
-  heatmapRegions,
-  type DrillFilterState,
-} from "@/lib/demandDrilldown";
-
-type PlanningDim = "region" | "category" | "brand";
+import { heatmapCategories, heatmapRegions, type DrillFilterState } from "@/lib/demandDrilldown";
 
 function FilterSelect({
   label,
@@ -160,49 +138,46 @@ function AccuracyHeatmapGrid({ cells }: { cells: { category: string; region: str
 }
 
 export function DemandPlanningDrilldownConsole() {
-  const [f, setF] = useState<DrillFilterState>(defaultDrillFilters);
-  const [planningDim, setPlanningDim] = useState<PlanningDim>("region");
-
-  const opFiltered = useMemo(() => filterOperationalForDemand(demoOperationalRows, f), [f]);
-  const filtered = useMemo(() => operationalRowsToDemandRows(opFiltered), [opFiltered]);
-  const kpis = useMemo(() => computeDrillKpis(filtered), [filtered]);
-  const narrative = useMemo(() => buildPlannerNarrative(filtered, f), [filtered, f]);
-  const weeklyFva = useMemo(() => buildForecastVsActualWeekly(f, filtered), [f, filtered]);
-  const byDim = useMemo(() => buildForecastVsActualByDim(filtered, planningDim), [filtered, planningDim]);
-  const growth = useMemo(() => growthByDimension(filtered, planningDim), [filtered, planningDim]);
-  const heatCells = useMemo(() => buildAccuracyHeatmap(filtered, heatmapCategories, heatmapRegions), [filtered]);
-  const skuRisk = useMemo(() => buildSkuRiskMatrix(filtered), [filtered]);
-  const handoffRows = useMemo(() => buildCompactDemandHandoffTable(opFiltered), [opFiltered]);
-  const exceptionRows = useMemo(() => buildDemandForecastExceptions(opFiltered, 5), [opFiltered]);
-  const aiSummary = useMemo(
-    () => buildDemandAiPlannerSummary(opFiltered, f, kpis),
-    [opFiltered, f, kpis],
-  );
-
-  const biasHint = kpis.forecastBias < -3 ? "Under-forecast bias" : kpis.forecastBias > 5 ? "Over-forecast bias" : "Balanced bias";
-  const accHint = kpis.forecastAccuracy >= 85 ? "On target" : kpis.forecastAccuracy >= 78 ? "Watch mix" : "Review slice";
-  const growthHint = kpis.demandGrowth >= 8 ? "Elevated growth" : kpis.demandGrowth <= 2 ? "Soft growth" : "Steady trend";
-  const riskHint = kpis.replenishmentRisk >= 50 ? "Elevated risk" : kpis.replenishmentRisk >= 30 ? "Controlled risk" : "Low risk";
-  const confHint = kpis.planningConfidence >= 80 ? "High confidence" : kpis.planningConfidence >= 72 ? "Moderate" : "Volatile";
-
-  const set = (key: keyof DrillFilterState) => (v: string) => setF((prev) => ({ ...prev, [key]: v }));
-  const tableRows = filtered.slice(0, 10);
+  const {
+    f,
+    planningDim,
+    setPlanningDim,
+    setFilter,
+    kpis,
+    narrative,
+    weeklyFva,
+    byDim,
+    growth,
+    heatCells,
+    skuRisk,
+    handoffRows,
+    exceptionRows,
+    aiSummary,
+    biasHint,
+    accHint,
+    growthHint,
+    riskHint,
+    confHint,
+    tableRows,
+  } = useDemandPlanningSession();
 
   return (
-    <div className="space-y-10">
+    <div id="demand-planning-console" className="space-y-10">
       <section>
-        <h2 className="text-[10px] font-semibold uppercase tracking-[0.26em] text-electric">Demand Planning Drilldown Console</h2>
-        <p className="mt-2 max-w-3xl text-sm text-muted">
-          Slice the shared GTC operational demo layer by Region, Category, Brand, SKU, Channel, and Route. KPIs and charts recompute from the same foundation used on Replenishment, Route, and Execution pages.
-        </p>
+        <div>
+          <h2 className="text-[10px] font-semibold uppercase tracking-[0.26em] text-electric">Demand Planning Drilldown Console</h2>
+          <p className="mt-2 max-w-3xl text-sm text-muted">
+            Slice the shared GTC operational demo layer by Region, Category, Brand, SKU, Channel, and Route. KPIs and charts recompute from the same foundation used on Replenishment, Route, and Execution pages.
+          </p>
+        </div>
 
         <div className="mt-6 flex flex-wrap gap-4 rounded-2xl border border-ivory/10 bg-ivory/[0.02] p-5 ring-1 ring-ivory/[0.04]">
-          <FilterSelect label="Region" value={f.region} onChange={set("region")} options={regions} />
-          <FilterSelect label="Category" value={f.category} onChange={set("category")} options={categories} />
-          <FilterSelect label="Brand" value={f.brand} onChange={set("brand")} options={brands} />
-          <FilterSelect label="SKU / Pack" value={f.sku} onChange={set("sku")} options={demoSkuFilterOptions} />
-          <FilterSelect label="Channel" value={f.channel} onChange={set("channel")} options={channels} />
-          <FilterSelect label="Route / Customer type" value={f.route} onChange={set("route")} options={routes} />
+          <FilterSelect label="Region" value={f.region} onChange={setFilter("region")} options={regions} />
+          <FilterSelect label="Category" value={f.category} onChange={setFilter("category")} options={categories} />
+          <FilterSelect label="Brand" value={f.brand} onChange={setFilter("brand")} options={brands} />
+          <FilterSelect label="SKU / Pack" value={f.sku} onChange={setFilter("sku")} options={demoSkuFilterOptions} />
+          <FilterSelect label="Channel" value={f.channel} onChange={setFilter("channel")} options={channels} />
+          <FilterSelect label="Route / Customer type" value={f.route} onChange={setFilter("route")} options={routes} />
         </div>
         <p className="mt-3 text-xs text-muted">{gtcOperationalDataDisclaimer}</p>
 
@@ -286,8 +261,10 @@ export function DemandPlanningDrilldownConsole() {
       </section>
 
       <section>
-        <h3 className="mb-4 text-[10px] font-semibold uppercase tracking-[0.26em] text-electric">Drilldown table</h3>
-        <p className="mb-3 text-xs text-muted">Showing up to 10 lanes. Full operational depth is available on Replenishment and Execution views.</p>
+        <div className="mb-4">
+          <h3 className="text-[10px] font-semibold uppercase tracking-[0.26em] text-electric">Drilldown table</h3>
+          <p className="mt-1 text-xs text-muted">Showing up to 10 lanes. Full operational depth is available on Replenishment and Execution views.</p>
+        </div>
         <div className="overflow-hidden rounded-2xl border border-ivory/10 ring-1 ring-ivory/[0.04]">
           <div className="overflow-x-auto">
             <table className="w-full min-w-[1200px] border-collapse text-left text-sm">

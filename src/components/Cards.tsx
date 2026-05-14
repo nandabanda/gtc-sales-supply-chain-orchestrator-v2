@@ -1,13 +1,27 @@
+import type { ReactNode } from "react";
 import { cn } from "@/lib/utils";
 
-export function PageTitle({ eyebrow, title, subtitle }: { eyebrow: string; title: string; subtitle: string }) {
+export function PageTitle({
+  eyebrow,
+  title,
+  subtitle,
+  aside,
+}: {
+  eyebrow: string;
+  title: string;
+  subtitle: string;
+  aside?: ReactNode;
+}) {
   return (
     <section className="relative py-8">
       <div className="absolute left-0 top-10 h-12 w-1 rounded-full bg-gradient-to-b from-electric to-electric/20" aria-hidden />
-      <div className="pl-6">
-        <p className="text-[10px] font-semibold uppercase tracking-[0.32em] text-electric">{eyebrow}</p>
-        <h1 className="mt-3 max-w-5xl text-4xl font-semibold tracking-tight text-ivory md:text-5xl">{title}</h1>
-        <p className="mt-4 max-w-3xl text-base leading-7 text-muted">{subtitle}</p>
+      <div className={cn("pl-6", aside ? "flex flex-col gap-8 lg:flex-row lg:items-start lg:justify-between lg:gap-12" : undefined)}>
+        <div className="min-w-0">
+          <p className="text-[10px] font-semibold uppercase tracking-[0.32em] text-electric">{eyebrow}</p>
+          <h1 className="mt-3 max-w-5xl text-4xl font-semibold tracking-tight text-ivory md:text-5xl">{title}</h1>
+          <p className="mt-4 max-w-3xl text-base leading-7 text-muted">{subtitle}</p>
+        </div>
+        {aside}
       </div>
     </section>
   );

@@ -18,6 +18,8 @@ import {
   type ReplenishmentOpFilters,
 } from "@/lib/gtcOperationalBridge";
 import { buildReplenishmentRows, type ReplenishmentRowView, type RiskLevel } from "@/lib/replenishment";
+import { DownloadButton } from "@/components/DownloadButton";
+import { objectsToCsvRows } from "@/lib/download";
 import { cn } from "@/lib/utils";
 
 function RiskBadge({ level }: { level: RiskLevel }) {
@@ -135,13 +137,29 @@ export function ReplenishmentEngine() {
     ];
   }, [opF, filteredOp, allRows, kpis]);
 
+  const replenishmentExportRows = useMemo(() => objectsToCsvRows(allRows.map((r) => ({ ...r, csv_section: "Replenishment recommendation" }))), [allRows]);
+  const replenishmentTableExportRows = useMemo(
+    () => objectsToCsvRows(allRows.slice(0, 10).map((r) => ({ ...r, csv_section: "Replenishment recommendation" }))),
+    [allRows],
+  );
+
   return (
     <div className="space-y-8">
       <section>
-        <h3 className="text-[10px] font-semibold uppercase tracking-[0.28em] text-electric">ROP replenishment engine</h3>
-        <p className="mt-2 max-w-4xl text-sm text-muted">
-          Customer-level recommendations using ADS, lead-time demand, safety stock, ROP, net stock, MOQ, shelf-life, credit and van readiness — fed from the shared GTC operational demo layer.
-        </p>
+        <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
+          <div>
+            <h3 className="text-[10px] font-semibold uppercase tracking-[0.28em] text-electric">ROP replenishment engine</h3>
+            <p className="mt-2 max-w-4xl text-sm text-muted">
+              Customer-level recommendations using ADS, lead-time demand, safety stock, ROP, net stock, MOQ, shelf-life, credit and van readiness — fed from the shared GTC operational demo layer.
+            </p>
+          </div>
+          <DownloadButton
+            label="Download Current View"
+            filename="gtc-replenishment-recommendations.csv"
+            rows={replenishmentExportRows}
+            className="self-start"
+          />
+        </div>
         <div className="mt-5 grid gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6">
           <SummaryCard label="Rows below ROP" value={kpis.belowRop} hint="Net stock ≤ reorder point" tone="danger" />
           <SummaryCard label="MOQ-adjusted supply" value={`${kpis.suggestedCases} cases`} hint="Recommended issue quantity" tone="electric" />
@@ -171,9 +189,18 @@ export function ReplenishmentEngine() {
 
       <section className="overflow-hidden rounded-2xl border border-ivory/10 bg-ivory text-ink shadow-[0_20px_60px_rgba(0,0,0,0.25)] ring-1 ring-black/[0.05]">
         <div className="border-b border-ink/10 bg-ivory px-4 py-3 sm:px-5">
-          <div className="flex items-center gap-2">
-            <div className="h-6 w-1 rounded-full bg-gradient-to-b from-electric to-electric/30" aria-hidden />
-            <h4 className="text-sm font-semibold text-ink">SKU × customer replenishment recommendations</h4>
+          <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
+            <div className="flex items-center gap-2">
+              <div className="h-6 w-1 rounded-full bg-gradient-to-b from-electric to-electric/30" aria-hidden />
+              <h4 className="text-sm font-semibold text-ink">SKU × customer replenishment recommendations</h4>
+            </div>
+            <DownloadButton
+              label="Export Table"
+              filename="gtc-replenishment-recommendations-table.csv"
+              rows={replenishmentTableExportRows}
+              variant="ghost"
+              className="border-ink/15 bg-ink/[0.04] text-ink hover:border-ink/25"
+            />
           </div>
         </div>
         <div className="overflow-x-auto">

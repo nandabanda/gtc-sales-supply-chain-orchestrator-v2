@@ -1,4 +1,5 @@
 import { PageTitle } from "@/components/Cards";
+import { DataLayerDownloadBar } from "@/components/DataLayerDownloadBar";
 import { cn } from "@/lib/utils";
 import {
   advancedDatasets,
@@ -24,6 +25,8 @@ export default function DataLayerPage() {
         title="Gold Data Layer"
         subtitle="Certify the operational data foundation before activating demand, replenishment, route, execution and governance intelligence."
       />
+
+      <DataLayerDownloadBar />
 
       <section>
         <h3 className="mb-4 text-[10px] font-semibold uppercase tracking-[0.26em] text-electric">Executive Readiness</h3>

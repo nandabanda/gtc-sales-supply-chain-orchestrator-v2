@@ -3,6 +3,7 @@
 import { useMemo, useState } from "react";
 import { DataTable, Panel } from "@/components/Cards";
 import { ProductivityChart } from "@/components/Charts";
+import { DownloadButton } from "@/components/DownloadButton";
 import {
   brands,
   categories,
@@ -14,6 +15,7 @@ import {
   salesmen,
 } from "@/data/gtcOperationalDemoData";
 import { defaultExecutionOpFilters, filterOperationalForExecution, type ExecutionOpFilters } from "@/lib/gtcOperationalBridge";
+import { objectsToCsvRows } from "@/lib/download";
 import { cn } from "@/lib/utils";
 
 function FilterSelect({
@@ -128,6 +130,12 @@ export function ExecutionIntelligenceView() {
       }));
   }, [rows]);
 
+  const executionFullExportRows = useMemo(() => objectsToCsvRows(rows.map((r) => ({ ...r, csv_section: "Execution intelligence" }))), [rows]);
+  const executionTableExportRows = useMemo(
+    () => objectsToCsvRows(outletRows.map((r) => ({ ...r, csv_section: "Outlet execution" }))),
+    [outletRows],
+  );
+
   const aiExecution = useMemo(() => {
     const sm = f.salesman !== "All Salesmen" ? f.salesman : rows[0]?.salesman ?? "field team";
     const rt = f.route !== "All Routes" ? f.route : rows[0]?.route ?? "priority routes";
@@ -148,6 +156,10 @@ export function ExecutionIntelligenceView() {
           <FilterSelect label="Brand" value={f.brand} onChange={set("brand")} options={brands} />
         </div>
         <p className="mt-3 text-xs text-muted">{gtcOperationalDataDisclaimer}</p>
+        <div className="mt-3 flex flex-wrap justify-end gap-2">
+          <DownloadButton label="Download Current View" filename="gtc-execution-intelligence-view.csv" rows={executionFullExportRows} />
+          <DownloadButton label="Export Table" filename="gtc-execution-outlets-table.csv" rows={executionTableExportRows} variant="ghost" />
+        </div>
       </section>
 
       <section>
