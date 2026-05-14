@@ -1,6 +1,5 @@
 import { PageTitle } from "@/components/Cards";
 import { DemandPlanningDrilldownConsole } from "@/components/DemandPlanningDrilldownConsole";
-import { DemandPlanningWorkspace } from "@/components/DemandPlanningWorkspace";
 
 export default function DemandIntelligence() {
   return (
@@ -12,10 +11,6 @@ export default function DemandIntelligence() {
       />
 
       <DemandPlanningDrilldownConsole />
-
-      <div className="my-12 h-px w-full bg-gradient-to-r from-transparent via-ivory/12 to-transparent" aria-hidden />
-
-      <DemandPlanningWorkspace />
     </>
   );
 }

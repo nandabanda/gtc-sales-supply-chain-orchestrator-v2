@@ -8,26 +8,32 @@ import {
   GrowthBarChart,
   SkuRiskScatter,
 } from "@/components/Charts";
+import {
+  brands,
+  categories,
+  channels,
+  demoOperationalRows,
+  demoSkuFilterOptions,
+  gtcOperationalDataDisclaimer,
+  regions,
+  routes,
+} from "@/data/gtcOperationalDemoData";
 import { cn } from "@/lib/utils";
 import {
-  DRILL_BRANDS,
-  DRILL_CATEGORIES,
-  DRILL_CHANNELS,
-  DRILL_REGIONS,
-  DRILL_ROUTES,
-  DRILL_SKUS,
-  demandDrilldownSeed,
-} from "@/data/demandDrilldownSeed";
+  buildCompactDemandHandoffTable,
+  buildDemandAiPlannerSummary,
+  buildDemandForecastExceptions,
+  filterOperationalForDemand,
+  operationalRowsToDemandRows,
+} from "@/lib/gtcOperationalBridge";
 import {
   buildAccuracyHeatmap,
   buildForecastVsActualByDim,
   buildForecastVsActualWeekly,
   buildPlannerNarrative,
-  buildReplenishmentHandoffBuckets,
   buildSkuRiskMatrix,
   computeDrillKpis,
   defaultDrillFilters,
-  filterDrilldownRows,
   growthByDimension,
   heatmapCategories,
   heatmapRegions,
@@ -104,8 +110,8 @@ function DrillKpi({
 }
 
 function AccuracyHeatmapGrid({ cells }: { cells: { category: string; region: string; accuracy: number }[] }) {
-  const regions = heatmapRegions;
-  const categories = heatmapCategories;
+  const reg = heatmapRegions;
+  const cat = heatmapCategories;
   const cellMap = new Map(cells.map((c) => [`${c.region}|${c.category}`, c.accuracy]));
   const heat = (acc: number) => {
     const t = (acc - 72) / 24;
@@ -119,7 +125,7 @@ function AccuracyHeatmapGrid({ cells }: { cells: { category: string; region: str
         <thead>
           <tr>
             <th className="p-2 text-left text-muted">Category × Region</th>
-            {regions.map((r) => (
+            {reg.map((r) => (
               <th key={r} className="p-2 font-semibold text-ivory/80">
                 {r}
               </th>
@@ -127,10 +133,10 @@ function AccuracyHeatmapGrid({ cells }: { cells: { category: string; region: str
           </tr>
         </thead>
         <tbody>
-          {categories.map((c) => (
+          {cat.map((c) => (
             <tr key={c}>
               <td className="p-2 text-left font-medium text-ivory/90">{c}</td>
-              {regions.map((r) => {
+              {reg.map((r) => {
                 const acc = cellMap.get(`${r}|${c}`) ?? 80;
                 return (
                   <td key={r} className="p-1">
@@ -148,7 +154,7 @@ function AccuracyHeatmapGrid({ cells }: { cells: { category: string; region: str
           ))}
         </tbody>
       </table>
-      <p className="mt-2 text-[11px] text-muted">Darker green = higher forecast accuracy % (mock blend for empty cells).</p>
+      <p className="mt-2 text-[11px] text-muted">Darker green = higher forecast accuracy % (demo blend).</p>
     </div>
   );
 }
@@ -157,7 +163,8 @@ export function DemandPlanningDrilldownConsole() {
   const [f, setF] = useState<DrillFilterState>(defaultDrillFilters);
   const [planningDim, setPlanningDim] = useState<PlanningDim>("region");
 
-  const filtered = useMemo(() => filterDrilldownRows(demandDrilldownSeed, f), [f]);
+  const opFiltered = useMemo(() => filterOperationalForDemand(demoOperationalRows, f), [f]);
+  const filtered = useMemo(() => operationalRowsToDemandRows(opFiltered), [opFiltered]);
   const kpis = useMemo(() => computeDrillKpis(filtered), [filtered]);
   const narrative = useMemo(() => buildPlannerNarrative(filtered, f), [filtered, f]);
   const weeklyFva = useMemo(() => buildForecastVsActualWeekly(f, filtered), [f, filtered]);
@@ -165,7 +172,12 @@ export function DemandPlanningDrilldownConsole() {
   const growth = useMemo(() => growthByDimension(filtered, planningDim), [filtered, planningDim]);
   const heatCells = useMemo(() => buildAccuracyHeatmap(filtered, heatmapCategories, heatmapRegions), [filtered]);
   const skuRisk = useMemo(() => buildSkuRiskMatrix(filtered), [filtered]);
-  const handoff = useMemo(() => buildReplenishmentHandoffBuckets(filtered), [filtered]);
+  const handoffRows = useMemo(() => buildCompactDemandHandoffTable(opFiltered), [opFiltered]);
+  const exceptionRows = useMemo(() => buildDemandForecastExceptions(opFiltered, 5), [opFiltered]);
+  const aiSummary = useMemo(
+    () => buildDemandAiPlannerSummary(opFiltered, f, kpis),
+    [opFiltered, f, kpis],
+  );
 
   const biasHint = kpis.forecastBias < -3 ? "Under-forecast bias" : kpis.forecastBias > 5 ? "Over-forecast bias" : "Balanced bias";
   const accHint = kpis.forecastAccuracy >= 85 ? "On target" : kpis.forecastAccuracy >= 78 ? "Watch mix" : "Review slice";
@@ -174,23 +186,25 @@ export function DemandPlanningDrilldownConsole() {
   const confHint = kpis.planningConfidence >= 80 ? "High confidence" : kpis.planningConfidence >= 72 ? "Moderate" : "Volatile";
 
   const set = (key: keyof DrillFilterState) => (v: string) => setF((prev) => ({ ...prev, [key]: v }));
+  const tableRows = filtered.slice(0, 10);
 
   return (
     <div className="space-y-10">
       <section>
         <h2 className="text-[10px] font-semibold uppercase tracking-[0.26em] text-electric">Demand Planning Drilldown Console</h2>
         <p className="mt-2 max-w-3xl text-sm text-muted">
-          Slice enterprise demand into Region, Category, Brand, SKU, Channel, and Route. KPIs, planner narrative, and replenishment handoff update from mock planning logic.
+          Slice the shared GTC operational demo layer by Region, Category, Brand, SKU, Channel, and Route. KPIs and charts recompute from the same foundation used on Replenishment, Route, and Execution pages.
         </p>
 
         <div className="mt-6 flex flex-wrap gap-4 rounded-2xl border border-ivory/10 bg-ivory/[0.02] p-5 ring-1 ring-ivory/[0.04]">
-          <FilterSelect label="Region" value={f.region} onChange={set("region")} options={DRILL_REGIONS} />
-          <FilterSelect label="Category" value={f.category} onChange={set("category")} options={DRILL_CATEGORIES} />
-          <FilterSelect label="Brand" value={f.brand} onChange={set("brand")} options={DRILL_BRANDS} />
-          <FilterSelect label="SKU / Pack" value={f.sku} onChange={set("sku")} options={DRILL_SKUS} />
-          <FilterSelect label="Channel" value={f.channel} onChange={set("channel")} options={DRILL_CHANNELS} />
-          <FilterSelect label="Route / Customer type" value={f.route} onChange={set("route")} options={DRILL_ROUTES} />
+          <FilterSelect label="Region" value={f.region} onChange={set("region")} options={regions} />
+          <FilterSelect label="Category" value={f.category} onChange={set("category")} options={categories} />
+          <FilterSelect label="Brand" value={f.brand} onChange={set("brand")} options={brands} />
+          <FilterSelect label="SKU / Pack" value={f.sku} onChange={set("sku")} options={demoSkuFilterOptions} />
+          <FilterSelect label="Channel" value={f.channel} onChange={set("channel")} options={channels} />
+          <FilterSelect label="Route / Customer type" value={f.route} onChange={set("route")} options={routes} />
         </div>
+        <p className="mt-3 text-xs text-muted">{gtcOperationalDataDisclaimer}</p>
 
         <div className="mt-4 flex flex-wrap items-center gap-3">
           <span className="text-[10px] font-semibold uppercase tracking-[0.2em] text-muted">Planning charts slice by</span>
@@ -226,31 +240,23 @@ export function DemandPlanningDrilldownConsole() {
         </div>
       </section>
 
-      <section className="grid gap-5 xl:grid-cols-3">
-        <div className="glass rounded-2xl p-5 ring-1 ring-ivory/[0.05] xl:col-span-2">
-          <h3 className="text-lg font-semibold text-ivory">AI Demand Planner</h3>
-          <p className="mt-1 text-sm text-muted">What moved demand, which slice is leading, whether the signal is growth, promo, seasonality, stockout distortion, or route execution — and what replenishment should do.</p>
-          <p className="mt-4 text-sm leading-relaxed text-ivory/90">{narrative}</p>
-        </div>
+      <section className="grid gap-5 lg:grid-cols-2">
         <Panel title="Forecast vs actual (weekly)" subtitle="Trend lens for the selected filter fingerprint.">
           <ForecastChart data={weeklyFva} />
         </Panel>
-      </section>
-
-      <section className="grid gap-5 lg:grid-cols-2">
-        <Panel title={`Forecast vs actual by ${planningDim}`} subtitle="30d forecast stacked against 30d actual by slice.">
+        <Panel title={`Forecast vs actual by ${planningDim}`} subtitle="30d forecast vs 30d actual by slice.">
           <ForecastVsActualGroupedBar data={byDim.length ? byDim : [{ name: "—", forecast: 0, actual: 0 }]} />
         </Panel>
-        <Panel title={`Demand growth by ${planningDim}`} subtitle="Volume-weighted growth % within the current drill-down.">
+        <Panel title={`Demand growth by ${planningDim}`} subtitle="Volume-weighted growth % in the current slice.">
           <GrowthBarChart data={growth.length ? growth : [{ name: "—", growth: 0 }]} />
         </Panel>
-      </section>
-
-      <section className="grid gap-5 lg:grid-cols-2">
         <Panel title="Forecast accuracy heatmap" subtitle="Category × Region (accuracy %).">
           <AccuracyHeatmapGrid cells={heatCells} />
         </Panel>
-        <Panel title="SKU risk matrix" subtitle="Demand pressure vs cover index — high demand with low cover flags Act now.">
+      </section>
+
+      <section>
+        <Panel title="SKU risk matrix" subtitle="Demand pressure vs cover — high demand with low cover reads as Act now.">
           <SkuRiskScatter data={skuRisk} />
           <div className="mt-4 overflow-x-auto rounded-xl border border-ivory/10">
             <table className="w-full text-left text-xs">
@@ -281,9 +287,10 @@ export function DemandPlanningDrilldownConsole() {
 
       <section>
         <h3 className="mb-4 text-[10px] font-semibold uppercase tracking-[0.26em] text-electric">Drilldown table</h3>
+        <p className="mb-3 text-xs text-muted">Showing up to 10 lanes. Full operational depth is available on Replenishment and Execution views.</p>
         <div className="overflow-hidden rounded-2xl border border-ivory/10 ring-1 ring-ivory/[0.04]">
           <div className="overflow-x-auto">
-            <table className="w-full min-w-[1400px] border-collapse text-left text-sm">
+            <table className="w-full min-w-[1200px] border-collapse text-left text-sm">
               <thead className="bg-ivory/[0.06] text-[10px] font-semibold uppercase tracking-wider text-muted">
                 <tr>
                   {[
@@ -311,7 +318,7 @@ export function DemandPlanningDrilldownConsole() {
                 </tr>
               </thead>
               <tbody>
-                {filtered.map((r, i) => (
+                {tableRows.map((r, i) => (
                   <tr key={`${r.sku}-${r.route}-${i}`} className="border-t border-ivory/[0.06] transition hover:bg-ivory/[0.04]">
                     <td className="px-3 py-3 font-medium text-ivory">{r.region}</td>
                     <td className="px-3 py-3 text-ivory/90">{r.category}</td>
@@ -334,32 +341,99 @@ export function DemandPlanningDrilldownConsole() {
               </tbody>
             </table>
           </div>
-          {filtered.length === 0 && <p className="px-5 py-8 text-center text-sm text-muted">No rows for this combination — reset filters.</p>}
+          {tableRows.length === 0 && <p className="px-5 py-8 text-center text-sm text-muted">No rows for this combination — reset filters.</p>}
         </div>
       </section>
 
       <section>
-        <h3 className="mb-4 text-[10px] font-semibold uppercase tracking-[0.26em] text-electric">Demand-to-Replenishment Handoff</h3>
-        <p className="mb-4 max-w-3xl text-sm text-muted">
-          Buckets derived from the filtered slice. RAG: <span className="text-danger">Red — Act now</span>, <span className="text-amber">Amber — Monitor</span>,{" "}
-          <span className="text-emerald">Green — Stable</span>.
-        </p>
-        <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
-          {handoff.map((h) => (
-            <div key={h.label} className="glass rounded-2xl p-5 ring-1 ring-ivory/[0.05]">
-              <div className="flex items-start justify-between gap-3">
-                <p className="text-sm font-semibold text-ivory">{h.label}</p>
-                <RagPill rag={h.rag} />
-              </div>
-              <ul className="mt-3 list-inside list-disc space-y-1.5 text-xs text-ivory/75">
-                {h.skus.length === 0 && <li className="list-none text-muted">No SKUs in this bucket for the current filters.</li>}
-                {h.skus.map((s) => (
-                  <li key={s}>{s}</li>
+        <h3 className="mb-3 text-[10px] font-semibold uppercase tracking-[0.26em] text-electric">Demand-to-Replenishment Handoff</h3>
+        <p className="mb-3 text-xs text-muted">Executive handoff view — five canonical buckets. RAG: Red Act now, Amber Monitor, Green Stable.</p>
+        <div className="overflow-hidden rounded-2xl border border-ivory/10 ring-1 ring-ivory/[0.04]">
+          <div className="overflow-x-auto">
+            <table className="w-full min-w-[960px] border-collapse text-left text-sm">
+              <thead className="bg-ivory/[0.06] text-[10px] font-semibold uppercase tracking-wider text-muted">
+                <tr>
+                  {["Action bucket", "SKU / Brand", "Region / Route", "Trigger", "Action", "Priority", "Owner", "RAG"].map((h) => (
+                    <th key={h} className="px-3 py-3 font-medium">
+                      {h}
+                    </th>
+                  ))}
+                </tr>
+              </thead>
+              <tbody>
+                {handoffRows.map((row) => (
+                  <tr key={row.actionBucket} className="border-t border-ivory/[0.06]">
+                    <td className="px-3 py-3 font-semibold text-ivory">{row.actionBucket}</td>
+                    <td className="px-3 py-3 text-ivory/90">{row.skuBrand}</td>
+                    <td className="px-3 py-3 text-ivory/85">{row.regionRoute}</td>
+                    <td className="max-w-[200px] px-3 py-3 text-xs text-ivory/80">{row.trigger}</td>
+                    <td className="max-w-[260px] px-3 py-3 text-xs text-ivory/80">{row.action}</td>
+                    <td className="px-3 py-3 text-xs font-medium text-ivory">{row.priority}</td>
+                    <td className="px-3 py-3 text-xs text-ivory/75">{row.owner}</td>
+                    <td className="px-3 py-3">
+                      <RagPill rag={row.rag} />
+                    </td>
+                  </tr>
                 ))}
-              </ul>
-            </div>
-          ))}
+              </tbody>
+            </table>
+          </div>
         </div>
+      </section>
+
+      <section>
+        <h3 className="mb-3 text-[10px] font-semibold uppercase tracking-[0.26em] text-electric">Forecast exceptions</h3>
+        <p className="mb-3 text-xs text-muted">Top five lanes by composite exception score in the filtered slice.</p>
+        <div className="overflow-hidden rounded-2xl border border-ivory/10 ring-1 ring-ivory/[0.04]">
+          <div className="overflow-x-auto">
+            <table className="w-full min-w-[900px] border-collapse text-left text-sm">
+              <thead className="bg-ivory/[0.06] text-[10px] font-semibold uppercase tracking-wider text-muted">
+                <tr>
+                  {["Region", "Category", "Brand", "SKU", "Exception", "Business risk", "Recommended action"].map((h) => (
+                    <th key={h} className="px-3 py-3 font-medium">
+                      {h}
+                    </th>
+                  ))}
+                </tr>
+              </thead>
+              <tbody>
+                {exceptionRows.map((row, i) => (
+                  <tr key={`${row.sku}-${i}`} className="border-t border-ivory/[0.06]">
+                    <td className="px-3 py-3 font-medium text-ivory">{row.region}</td>
+                    <td className="px-3 py-3 text-ivory/90">{row.category}</td>
+                    <td className="px-3 py-3 text-ivory/90">{row.brand}</td>
+                    <td className="px-3 py-3 text-ivory/90">{row.sku}</td>
+                    <td className="max-w-[200px] px-3 py-3 text-xs text-ivory/85">{row.exception}</td>
+                    <td className="max-w-[220px] px-3 py-3 text-xs text-ivory/80">{row.businessRisk}</td>
+                    <td className="max-w-[260px] px-3 py-3 text-xs text-electric/95">{row.recommendedAction}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </section>
+
+      <section className="glass rounded-2xl p-6 ring-1 ring-ivory/[0.05]">
+        <h3 className="text-lg font-semibold text-ivory">AI Demand Planner Summary</h3>
+        <p className="mt-1 text-sm text-muted">Concise readout for steering committee — includes narrative context for the same slice.</p>
+        <ul className="mt-5 space-y-4 text-sm leading-relaxed text-ivory/88">
+          <li>
+            <span className="font-semibold text-electric">What changed?</span> {aiSummary.whatChanged}
+          </li>
+          <li>
+            <span className="font-semibold text-electric">Where is the risk?</span> {aiSummary.whereRisk}
+          </li>
+          <li>
+            <span className="font-semibold text-electric">What should replenishment do?</span> {aiSummary.replenishmentDo}
+          </li>
+          <li>
+            <span className="font-semibold text-electric">What should sales execution watch?</span> {aiSummary.salesWatch}
+          </li>
+        </ul>
+        <p className="mt-5 border-t border-ivory/[0.08] pt-4 text-sm leading-relaxed text-ivory/82">
+          <span className="font-semibold text-ivory">Planner narrative:</span> {narrative}
+        </p>
       </section>
     </div>
   );

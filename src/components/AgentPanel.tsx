@@ -32,6 +32,10 @@ export function AgentPanel() {
   const [query, setQuery] = useState("");
   const pathname = usePathname();
 
+  if (pathname === "/demand-intelligence") {
+    return null;
+  }
+
   const isCommandCenter = pathname === "/command-center";
   const isDemandIntelligence = pathname === "/demand-intelligence";
   const isReplenishment = pathname === "/replenishment-orchestrator";
